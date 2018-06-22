@@ -1,0 +1,99 @@
+Forcing Data
+
+  QA/QC
+    1. Spatial map of monthly climatology
+    2. Gridbox timeseries comparison against station data
+    3.
+
+Hydrology Modeling
+
+Routing Nodes
+  Match to as m
+
+  QA/QC
+    1. Spatial map of monthly climatology of water balance variables
+      Soil moisture
+      Baseflow
+      Runoff
+      Snow
+      Others?
+    2. Hydrographs of mean monthly flows for routed streamflow
+    3.
+
+Demands Modeling
+  QA/QC
+    1. Mean monthly NIR across scenarios
+
+
+CRLE Modeling
+  QA/QC
+    1. Mean monthly reservoir evaporation across scenarios
+
+
+RiverWare Modeling
+  Naming convention
+    1. File Name
+    2. Model object names
+  Model Settings
+    1. Use environmental variable for project directory to allow models to be
+      moved to other computers
+    2. Model settings to check:
+      a. MRM
+        -Input DMI
+        -Output DMI
+        -Ruleset
+      b. DMI
+        -Control File
+    3. Input and Output DMI
+
+    4. Model Diagnostics
+      a. Have a data object that can summarize model performance
+        (perhaps two data objects; an annual and a monthly mean?)
+        -Mean monthly streamflow at key locations
+        -Mean annual diversion
+        -Mean annual shortage
+        -Mean monthly reservoir storage
+        -Mean monthly reservoir inflow
+        -Mean monthly reservoir outflow
+        -Mean monthly hydropower production
+      b. Have a second data object that can summarize NaN / NA values
+        -Diversions
+        -Shortages
+        -Reservoir storage
+        -Reservoir inflow
+        -Reservoir outflow
+        -Hydropower production
+        -
+
+RiverSmart
+  Improvements
+    a. Save run status independent of study file so that if RiverSmart crashes
+      or is interrupted, the run status is preserved
+    b. Last run date column in the Scenario Manager to see the last time a
+      scenario was run
+    c. The ability to name traces - instead of Trace 1, Trace 2 etc in the output,
+      call them 'Historical', 'HD', 'LPP' etc.
+Naturalized Flows
+
+Observed Flows
+
+Bias-Correction
+
+Paleoclimate Data
+
+References
+  1. Articles and Reports - Mendeley
+  2. Reference data - Google Drive or Shared Drive project folder
+  3. Map with hydrology, land cover, gauge flow locations, naturalized flow
+    locations, crop acreages
+    -Options:
+      ShinyApp
+      Google Earth Engine
+      ArcMap / QGis
+      Others?
+Project Management
+  1. Shared project folder
+    a. ProjectManagement - Plan of Study, PMP, Scope of Work, CO, budget etc.
+    b.
+  2. GitHub for code, scripts, model files, look-up tables, notes, etc.
+  3. External file share site e.g. Sharepoint for study partners
