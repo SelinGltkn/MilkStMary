@@ -1,0 +1,348 @@
+SMYM8 St. Mary River nr Babb
+   10 1980    9 2004
+#   10 1978    9 2004  Flow observation at SMYM8
+#   10 1980    9 2004  Computed Canadian Demands
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+SMYM8UP    MAP     6            INPUT
+MAP/smym8upr.MAP06
+SMYM8UP    MAT     6            INPUT
+MAT/smym8upr.MAT.adjusted
+SMYM8UP    SASC    6
+SMYM8UP    SWE     6
+SMYM8UP    RAIM    6
+SMYM8UP    ROCL   24
+SMYM8UP    SMZC   24
+SMYM8UP    INFW    6
+SMYM8UP    SQIN    6
+SMYM8UP    SQME   24
+SMYM8LO    MAP     6            INPUT
+MAP/smym8lwr.MAP06
+SMYM8LO    MAT     6            INPUT
+MAT/smym8lwr.MAT.adjusted
+SMYM8LO    SASC    6
+SMYM8LO    SWE     6
+SMYM8LO    RAIM    6
+SMYM8LO    ROCL   24
+SMYM8LO    SMZC   24
+SMYM8LO    INFW    6
+SMYM8LO    SQIN    6
+SMYM8LO    SQME   24
+3003       INFW    6
+3003       RAIM    6
+3003       ROCL   24
+3003       SMZC   24
+# ----- Regulation Modeling -------------------------
+# For the St. Mary Canal Diversion
+# Demand from Canada (prorated for SMBM8 local flows)
+# - computed and written by SMBCA
+SMBCADMD   SQIN    6            INPUT
+DEMAND/SMBCA.DEMCAP_SMYM8.SQIN
+# Demand from St. Mary Canal
+SCCM8DMD   SQIN    6            INPUT
+DEMAND/SCCM8.DEMAND.SQIN
+# Available at diversion structure
+AVAIL      SQIN    6            INTERNAL
+# Excess diversion
+ABVLIM     SQIN    6            INTERNAL
+# Actual simulated diversion at diversion structure
+SCCM8      SQIN    6
+# Actual simulated diversion at SCCM8
+SCCM8RTD   SQIN    6
+SCCM8RTD   SQME   24            OUTPUT
+TotSQME/SCCM8.DIV.SQME                                                 (6F10.2)
+# ----- Upstream Return Flows -----------------------
+# None
+# ----- Observed Streamflow -------------------------
+SMYM8      QME    24            INPUT
+TotQME/SMYM8.OBS.QME
+SMYM8      QIN     6            
+SCSM8      SQME   24            INPUT
+TotQME/SCSM8.OBS.RQME
+SCSM8      SQIN    6            
+SCSM8RTD   SQIN    6
+SCSM8RTD   SQME   24
+# ----- Gaged Diversions ----------------------------
+SCCM8      DQME   24            INPUT
+DQME/SCCM8.OBS.DQME
+# ----- Un-Gaged Diversions -------------------------
+# None
+# ----- Sum of Routed Flows -------------------------
+# Equal to SCSM8RTD   SQIN
+# ----- Computed Local Natural Flows ----------------
+3003       QIN     6
+3003       QME    24            OUTPUT
+NatQME/SMYM8.LOC.NAT.QME                                               (6F10.2)
+# ----- Simulated Local Natural Flows ---------------
+# Before routing through St Mary Lake                    
+3003       SQIN    6
+3003       SQME   24            
+# After routing through St Mary Lake
+3003RTD    SQIN    6
+3003RTD    SQME   24            OUTPUT
+NatSQME/SMYM8.LOC.NAT.SQME                                             (6F10.2)
+# ----- Simulated Total Flows -----------------------
+SMYM8      SQIN    6      
+SMYM8      SQME   24            OUTPUT
+TotSQME/SMYM8.TOT.SQME                                                 (6F10.2)      
+SMYM8      QINE    6            OUTPUT
+TotQINE/SMYM8.TOT.QINE                                                 (6F10.2)
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    SMYM8
+  SMYM8    QME    24  SMYM8    QIN     6
+#
+## Route the Upstream Releases from Sherbourne Reservoir
+#
+CHANGE-T    SCSM8
+  SCSM8    SQME   24  SCSM8    SQIN    6
+LAG/K       SCSM8
+SCSM8    SQIN  6 SCSM8RTD SQIN  6     0     0 METR 0.00       0.0
+      8.00
+     48.00
+           0
+MEAN-Q      MQ2-ROUTED
+  SCSM8RTD SQIN    6  SCSM8RTD SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-UPR
+UP SMYM8 ABV 9500ft 2143.  49.            YES SUMS           RDCO
+    6  SMYM8UP  MAP      1.000       SMYM8UP  RAIM
+  SMYM8UP  MAT     6     2143.  0.6  0.6
+  SMYM8UP  SWE     6            SMYM8UP  SASC    6
+ 1.300.8000.3000.1009999.    0
+0.1500.1000.000 2.000.0200.300
+  .14  .23  .33  .41  .51  .60  .69  .79  .90
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+UP SMYM8 ABV 9500ft          6  SMYM8UP  RAIM       SMYM8UP  INFW
+  SMYM8UP  SASC    6  SMYM8UP   SMYM8UP  SUMS                FRZE
+                    1.0001.000 20.0 45.00.3000.0200.0000.000    0  .34
+                     60.0 1.40 80.0 100. 160.0.0600.0050.400 .300  .00
+                    0.430.470.921.872.943.213.423.392.190.910.440.40 
+                      20.  0.0  75. 40.0 100. 100.    0
+  SMYM8UP  MAT     6                 SMYM8UP  SWE     6
+0.1000.0800.120 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+SNOW-17     SN2-LWR
+LO SMYM8 BLW 2000ft 1574.  49.            YES SUMS           RDCO
+    6  SMYM8LO  MAP      1.000       SMYM8LO  RAIM
+  SMYM8LO  MAT     6     1674.  0.6  0.6
+  SMYM8LO  SWE     6            SMYM8LO  SASC    6
+ 1.35 1.100.4000.100 700.    0
+0.1500.1000.000 2.000.0200.300
+  .16  .25  .39  .57  .74  .87  .92  .96  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC2-LWR
+LO SMYM8 BLW 2000ft          6  SMYM8LO  RAIM       SMYM8LO  INFW
+  SMYM8LO  SASC    6  SMYM8LO   SMYM8LO  SUMS                FRZE
+                    1.0001.000 20.0 45.00.3000.0200.0000.000    0  .57
+                     60.0 1.40 80.0 100. 160.0.0600.0050.400 .300  .00
+                    0.530.571.022.373.744.214.424.392.891.410.440.40 
+                      20.  0.0  75. 40.0 100. 100.    0
+  SMYM8LO  MAT     6                 SMYM8LO  SWE     6
+0.1000.0800.120 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+## Weighting of the Elevation Zones
+#
+WEIGH-TS    WT1-SUMINFLO
+    2       3003     INFW    6
+SMYM8UP   INFW       0.47
+SMYM8LO   INFW       0.53
+WEIGH-TS    WE2
+    2       3003     RAIM    6
+SMYM8UP   RAIM       0.47
+SMYM8LO   RAIM       0.53
+WEIGH-TS    WE3
+    2       3003     ROCL   24
+SMYM8UP   ROCL       0.47
+SMYM8LO   ROCL       0.53
+WEIGH-TS    WE4
+    2       3003     SMZC   24
+SMYM8UP   SMZC       0.47
+SMYM8LO   SMZC       0.53
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-SMYM8
+SMYM8                         218.0   14           ENGL     0.000
+  3003     INFW    6  3003     SQIN    6
+     8820.    11300.     3321.        0.        0.        0.        0.
+        0.        0.        0.        0.        0.        0.        0.
+MEAN-Q      MQ4-3003    
+  3003     SQIN    6  3003     SQME   24
+#
+## Flow is lagged as it proceeds through St. Mary Lakes
+#
+LAG/K       LK1-ROUTE SMYM8 THROUGH LAKE
+3003     SQIN  6 3003RTD  SQIN  6     0     0 ENGL  0.0       0.0
+      0.
+     48.
+         0
+MEAN-Q      MQ5-3003RTD 
+  3003RTD  SQIN    6  3003RTD  SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTAL       
+    2       SMYM8    SQIN    6
+3003RTD   SQIN       1.00
+SCSM8RTD  SQIN       1.00
+MEAN-Q      MQ6-3003     
+  SMYM8    SQIN    6  SMYM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-SMYM8
+SMYM8                   0    1    0
+SMYM8      QME    24
+SMYM8      SQIN    6
+SMYM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       3003     QIN     6
+SMYM8     QIN        1.00
+SCSM8RTD  SQIN      -1.00
+MEAN-Q      MQ1-LOCALNATURAL
+  3003     QIN     6  3003     QME    24
+#
+# --------------- St. Mary Canal Diversion -----------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Assume that all the demand for the St.Mary Canal gets diverted if
+## water is available. Available is all that is not required to be 
+## sent downstream to Canada to meet what is not already met by the
+## SMBM8 local contribution. This time series was computed in the
+## SMBCA deck.
+#
+## Subtract the prorated Canadian demand from the total simulated flows
+#
+ADD/SUB     1AVAIL
+  AVAIL    SQIN    6  SMYM8    SQIN    6  ADD
+ADD/SUB     2AVAIL
+  AVAIL    SQIN    6  SMBCADMD SQIN    6  SUB
+#
+## Take minimum of the remaining flow and diversion demand
+#
+ADD/SUB     SCCM8
+  SCCM8    SQIN    6  SCCM8DMD SQIN    6  ADD
+ADD/SUB     ABVLIM1
+  ABVLIM   SQIN    6  SCCM8DMD SQIN    6  ADD 
+ADD/SUB     ABVLIM2
+  ABVLIM   SQIN    6  AVAIL    SQIN    6  SUB 
+ADD/SUB     ABVLIM3
+  SCCM8    SQIN    6  ABVLIM   SQIN    6  SUB
+#
+## Route the flows diverted to the SCCM8 site
+#
+LAG/K       LK0-SCCM8
+SCCM8    SQIN  6 SCCM8RTD SQIN  6     2     2 METR 0.00       0.0
+      4.00   0    2.00    15
+      2.00   0    1.00    15
+           0
+MEAN-Q      SCCM8RTD   
+  SCCM8RTD SQIN    6  SCCM8RTD SQME   24
+#
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT-SMYM8
+COMPARE RTD TO INST          3    1    4
+ ARIT   40         0       200    4           #--Routed flows 
+  SMYM8    QIN     6        DOWNSTR         d    # Observed total
+  SMYM8    SQIN    6        TOTALSIM        t    # Simulated total 
+  SCSM8    SQIN    6        UPSTR           u    # SFBM8 upstream   
+  SCSM8RTD SQIN    6        ROUTED          r    # SFBM8 routed     
+STAT-QME    ST1-ROUTE
+ROUTING-SMYM8           9999.9  SCSM8RTD SQME   24  SMYM8    QME    24
+#
+## Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+SMYM8                   2 SLOG      563.  210  YES
+  3003     QME         OBSRVD_NAT      o
+  3003RTD  SQME        SMYM8_RTD       l
+  3003     RAIM    6            3003                3003     SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS             563.    3003RTD  SQME   24  3003     QME    24
+#
+## Additional Natural Local Flows: Plotting of Elevation Zone Components
+#
+WEIGH-TS    WT2-UPPER
+    1       SMYM8UP  INFW    6
+SMYM8UP   INFW      0.47
+UNIT-HG     UH2-SMYM8
+SMYM8                         218.0    3           ENGL     0.000
+  SMYM8UP  INFW    6  SMYM8UP  SQIN    6
+     8820.    11300.     3321.
+MEAN-Q      MQ2-SMYM8UP
+  SMYM8UP  SQIN    6  SMYM8UP  SQME   24
+WEIGH-TS    WT3-LOWER
+    1       SMYM8LO  INFW    6
+SMYM8LO   INFW      0.53
+UNIT-HG     UH3-SMYM8
+SMYM8                         218.0    3           ENGL     0.000
+  SMYM8LO  INFW    6  SMYM8LO  SQIN    6
+     8820.    11300.     3321.
+MEAN-Q      MQ3-SMYM8LO
+  SMYM8LO  SQIN    6  SMYM8LO  SQME   24
+WY-PLOT     WY2-COMPONENTS
+SMYM8                   5 SLOG      563.  210  YES
+  3003     QME         OBSERVEDLOC     o
+  3003RTD  SQME        ROUTED_SIM      r
+  3003     SQME        SIMULATEDLOC    s
+  SMYM8UP  SQME        UPPER_PORTION   u
+  SMYM8LO  SQME        LOWER_PORTION   l
+  SMYM8UP  RAIM    6            SMYM8UP             SMYM8UP  SMZC
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+SMYM8                   3 SLOG      739.  210  YES
+  SMYM8    QME         OBSRVD_NAT      o
+  SMYM8    SQME        SMYM8_TOT       l
+  SCSM8RTD SQME        UPSTREAM        u
+  3003     RAIM    6            3003                3003     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS             739.    SMYM8    SQME   24  SMYM8    QME    24
+PEAKFLOW   SMYM8
+instantaneous         05017500  SMYM8    SQIN
+    6    2    0    0    SMYM8.OBS.PEAK
+#
+## St. Mary Canal
+#
+PLOT-TS     TOT&DIV
+SIMULATED DIVERSIONS         3    2    6    0
+ ARIT   20         0       200    4           #--Total and available flow 
+  SMYM8    QIN     6        DOWNSTR         d    # Observed total
+  SMYM8    SQIN    6        TOTALSIM        t    # Simulated total
+  AVAIL    SQIN    6        AVAILABLE       m    # Available flow for St. Mary Canal
+  SMBCADMD SQIN    6        CANADA DEMAND   c    # Canadian Demand
+ ARIT   20         0       200    2           #--St. Mary Canal
+  SCCM8    DQME   24        OBSERVED        d    # Observed diversion
+  SCCM8RTD SQME   24        SIMULATED       t    # Simulated diversion 
+STAT-QME    ST3-SCCM8
+SCCM8 FLOWS            9999.    SCCM8RTD SQME   24  SCCM8    DQME   24 
+STOP

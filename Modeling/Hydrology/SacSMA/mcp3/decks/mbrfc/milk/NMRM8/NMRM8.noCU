@@ -1,0 +1,274 @@
+NMRM8 N.F. Milk Rvr abv Intl Boundary
+   10 1948    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data --------------
+3008       MAP     6            INPUT
+MAP/3008.MAP06
+3008       MAT     6            INPUT
+MAT/3008.MAT
+3008       SASC    6
+3008       SWE     6
+3008       RAIM    6
+3008       ROCL   24
+3008       SMZC   24
+3008       INFW    6
+# ----- Regulation Modeling -------------------------
+# Local diversions for an unknown area in the U.S.
+# is ignored
+# Visual assessment of arial photos 
+# reveals little irrigation, USGS records indicate
+# several 'small' diversions
+# ----- Upstream Return Flows -----------------------
+# None currently, but possible from NFMM8
+# ----- Observed Streamflow Observations ------------
+NMRM8      QME    24            INPUT
+TotQME/NMRM8.OBS.QME
+NMRM8      QIN     6
+NFMM8      SQIN    6            INPUT
+TotQINE/NFMM8.TOT.QINE
+NFMM8RTD   SQIN    6
+NFMM8RTD   SQME   24
+# ----- Gaged Diversions ----------------------------
+SCCM8      SQME   24            INPUT
+DQME/SCCM8.OBS.DQME
+SCCM8      SQIN    6
+SCCM8RTD   SQIN    6
+SCDM8      QME    24            INPUT
+DQME/SCDM8.OBS.DQME
+SCDM8      QIN     6
+SCDM8EST   SQME   24
+SCDM8EST   SQIN    6
+SCDM8FIL   SQIN    6
+SCDM8FIL   SQME   24            OUTPUT
+DQME/SCDM8.FILL.DQME
+SCDM8RTD   SQIN    6
+SCDM8RTD   SQME   24
+# ----- Un-Gaged Diversions -------------------------
+# Not individually modelled 
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6
+ROUTED     SQME   24
+# ----- Computed Local Natural Flows ----------------
+3008       QIN     6
+3008       QME    24            OUTPUT
+NatQME/NMRM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+3008       SQIN    6
+3008       SQME   24            OUTPUT
+NatSQME/NMRM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+NMRM8      SQIN    6
+NMRM8      SQME   24            OUTPUT
+TotSQME/NMRM8.TOT.SQME
+NMRM8      QINE    6            OUTPUT
+TotQINE/NMRM8.TOT.QINE
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    NMRM8
+  NMRM8    QME    24  NMRM8    QIN     6
+#
+## Route the upstream flow (simulated adjusted to observed)
+#
+LAG/K       LK1-NFMM8
+NFMM8    SQIN  6 NFMM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+    4.0   0   2.0   350
+    2.0   0   0.0   350
+           0
+MEAN-Q      MQ1-ROUTED
+  NFMM8RTD SQIN    6  NFMM8RTD SQME   24
+#
+## Route the St. Mary at Crossing Flows to the Divide
+#
+CHANGE-T    SCCM8
+  SCCM8    SQME   24  SCCM8    SQIN    6
+LAG/K       LK2-SCCM8
+SCCM8    SQIN  6 SCCM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+      15.0   0   9.0   150
+       9.0   0   6.0   150
+           0
+#
+## Scale the St. Mary at Crossing Flows to the Flows at the Divide
+#
+WEIGH-TS    WT1-SCALECROSSING
+    1       SCDM8EST SQIN    6
+SCCM8RTD  SQIN     0.977
+MEAN-Q      MQ1-SCALECROSSING
+  SCDM8EST SQIN    6  SCDM8EST SQME   24
+#
+## Merge the St. Mary at Crossing Flows with the Flows at the Divide
+#
+CHANGE-T    SCDM8
+  SCDM8    QME    24  SCDM8    QIN     6
+MERGE-TS    SCDM8
+    2  SCDM8FIL SQIN    6    0
+SCDM8      QIN
+SCDM8EST   SQIN
+MEAN-Q      MQ2-FILLEDDIVIDE
+  SCDM8FIL SQIN    6  SCDM8FIL SQME   24
+#
+## Route the Divide Flows to the outlet
+#
+LAG/K       LK3-SCDM8
+SCDM8FIL SQIN  6 SCDM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+       6.0   0   0.0   150
+      18.0   0   3.0   150
+           0
+MEAN-Q      MQ1-SCDM8
+  SCDM8RTD SQIN    6  SCDM8RTD SQME   24
+#
+## Sum up routed flows
+#
+WEIGH-TS    WT2-SUMOFROUTED
+    2       ROUTED   SQIN    6
+SCDM8RTD  SQIN       1.00
+NFMM8RTD  SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-3008 
+3008                1347.  41.            YES SUMS           RDCO
+    6  3008     MAP      1.000       3008     RAIM
+  3008     MAT     6     1347.  0.6  0.6
+  3008     SWE     6            3008     SASC    6
+ 1.45 1.000.2000.1009999.    0
+0.1500.2000.000 1.000.0500.200
+  .27  .40  .51  .58  .64  .71  .77  .84  .92
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3008    
+3008                         6  3008     RAIM       3008     INFW
+  3008     SASC    6  3008      3008     SUMS                FRZE
+                    1.0001.000 40.0 50.00.2500.0050.0000.030    0  .00
+                     100. 1.50 120. 60.0 150.0.0500.0040.300 .300  .00
+                    0.370.310.611.772.843.083.123.022.071.080.380.34
+                      5.0  0.0  20.  0.0  10.  25.    0
+  3008     MAT     6                 3008     SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3008 
+3008                           34.0    3           ENGL     0.000
+  3008     INFW    6  3008     SQIN    6
+    1935.3    1351.9     368.7
+MEAN-Q      MQ4-3008    
+  3008     SQIN    6  3008     SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#
+# Save the routed time series
+#
+#WEIGH-TS    WT10-SAVESIMULATEDROUTEDNODIVERSION
+#    1       ROUTEDOD SQIN    6
+#ROUTED    SQIN       1.00
+#
+# Account for consumptive use (from routed flows)
+#
+#CHANLOSS    NMRM8
+#ASSUMED LOSS         VARC
+#ROUTED     SQIN    6
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#MEAN-Q      MQ1-SUMROUTED
+#  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# Compute the diversion that was actually possible
+#
+#CLEAR-TS
+#  NMRM8DIV SQIN    6
+#WEIGH-TS    WT10-ACTUALDIVERSION
+#    2       NMRM8DIV SQIN    6
+#ROUTEDOD  SQIN       1.00
+#ROUTED    SQIN      -1.00
+#MEAN-Q      MQ2-ESTIMATEDDIVERSION
+#  NMRM8DIV SQIN    6  NMRM8DIV SQME   24
+#&& Replaced by modeling end
+#
+## Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       NMRM8    SQIN    6
+3008      SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ5-NMRM8   
+  NMRM8    SQIN    6  NMRM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-NMRM8
+NMRM8                   0    1    0
+NMRM8      QME    24
+NMRM8      SQIN    6
+NMRM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       3008     QIN     6
+NMRM8     QIN        1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  3008     QIN     6  3008     QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT-CROSSINGTODIVIDE
+CROSSING TO DIVIDE           3    1    3
+ ARIT   40         0        30    3           #--St. Mary Canal 
+  SCDM8    QIN     6        DIVIDE          d    # Observed at Divide  
+  SCCM8    SQIN    6        CROSSING        c    # Observed at Crossing 
+  SCDM8EST SQIN    6        DIVEST          e    # Estimated at Crossing 
+STAT-QME    CROSSINGTODIVIDE
+CROSSING TO DIVIDE      9999.9  SCDM8EST SQME   24  SCDM8    QME    24
+PLOT-TS     PLOT-NMRM8
+COMPARE LAG TO INST          3    1    7
+ ARIT   40         0        80    7           #--Routed flows 
+  NMRM8    QIN     6        DOWNSTR         d    # Observed total
+  NMRM8    SQIN    6        TOTALSIM        t    # Simulated total 
+  NFMM8    SQIN    6        NFMM8           n    # NFMM8 upstream    
+  NFMM8RTD SQIN    6        NFMM8RTD        f    # NFMM8 routed      
+  SCDM8FIL SQIN    6        SCDM8           s    # SCDM8 upstream    
+  SCDM8RTD SQIN    6        SCDM8RTD        c    # SCDM8 routed      
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed 
+STAT-QME    LAG
+LAG ANALYSIS-NMRM8      9999.9  ROUTED   SQME   24  NMRM8    QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+NMRM8                   2 SLOG       88.   10  YES
+  3008     QME         OBSRVD_NAT      o
+  3008     SQME        NMRM8_LOC       l
+  3008     RAIM    6            3008                3008     SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS              88.    3008     SQME   24  3008     QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+NMRM8                   2 SLOG      244.   50  YES
+  NMRM8    QME         OBSRVD_TOT      o
+  NMRM8    SQME        SIM_TOT       l
+  3008     RAIM    6            3008                3008     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS             244.    NMRM8    SQME   24  NMRM8    QME    24
+STOP

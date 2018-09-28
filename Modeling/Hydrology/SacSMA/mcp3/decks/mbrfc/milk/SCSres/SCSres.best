@@ -1,0 +1,258 @@
+SHERBURNE RESERVOIR                                                     
+   10 1993    9 2003  ENGL
+DEF-TS
+SCSINPOS   RQIM   24            INPUT         CARD
+RQIM/SCS.RQIM24 
+SCS        PELV   24            INPUT         CARD
+PELV/SCS.PELV24
+SCS        PELV    6
+SCS        RQME   24            INPUT         CARD
+RQME/SCSTot.RQME24
+STMARY     SQME   24            INPUT
+DQME/SCCM8.OBS.DQME
+SMYM8      SQME   24            INPUT
+NatSQME/SMYM8.LOC.NAT.SQME
+CANDEM2    SQIN    6            INPUT 
+DEMAND/SMBCA.DEMAND_SMYM8.SQIN
+SIMSTMRY   SQIN    6            INPUT
+DEMAND/SCCM8.DEMAND.SQIN
+CAPCDEM    SQIN    6            INPUT 
+DEMAND/SMBCA.DEMCAP_SMYM8.SQIN
+CANSURP    SQIN    6
+SMYM8      SQIN    6
+STMARY     SQIN    6
+DEFICIT    SQIN    6
+DEFICIT    SQME   24
+SCS        RQOT    6
+SCSSIMRL   SQIN    6     
+SCSSIMRL   SQME   24
+SCSSIMEL   SPEL    6
+SCSINPOS   RQIN    6
+END
+CHANGE-T    NATUS   
+  SMYM8    SQME   24  SMYM8    SQIN    6
+CHANGE-T    STMARY
+  STMARY   SQME   24  STMARY   SQIN    6
+CHANGE-T    POOL  
+  SCS      PELV   24  SCS      PELV    6
+CHANGE-T    OUTFLOW 
+  SCS      RQME   24  SCS      RQOT    6
+CHANGE-T    INFLOW                       7
+  SCSINPOS RQIM   24  SCSINPOS RQIN    6
+ADD/SUB     CANSURP
+  CANSURP  SQIN    6  SMYM8    SQIN    6
+ADD/SUB     CANSURP2
+  CANSURP  SQIN    6  CAPCDEM  SQIN    6  SUB 
+ADD/SUB     DEFICIT
+  DEFICIT  SQIN    6  STMARY   SQIN    6
+ADD/SUB     DEFICIT2
+  DEFICIT  SQIN    6  CANSURP  SQIN    6  SUB
+RES-J       SHERBURNE
+
+  TIMESERIES
+     TIMESTEP        06
+        INPUT   SCSINPOS RQIN 06 SCS_INFLOW   #COMPUTED INFLOWS
+        INPUT   SCS      PELV 06 SCS_OBS_POOL #OBSERVED POOL ELEVATION
+        INPUT   SCS      RQOT 06 SCS_OBS_OUTF #OBSERVED TOTAL OUTFLOW
+        INPUT   DEFICIT  SQIN 06 SCS_DEM_RELS #RELEASE TO SATISFY TREATY
+        OUTPUT  SCSSIMRL SQIN 06 SCS_SIM_REL  #SIMULATED RELEASE
+        OUTPUT  SCSSIMEL SPEL 06 SCS_SIM_POOL #SIMULATED POOL ELEVATION
+   ENDTIMESERIES
+
+   TOPOLOGY
+     RESERVOIR  SHERBURNE
+   ENDTOPOLOGY
+
+   PARAMETERS
+   UNITS ENGLISH
+     RESERVOIR SHERBURNE
+       TSINPUT inflow SCS_INFLOW  
+       TSOUTPUT release SCS_SIM_REL
+       TSOUTPUT pool SCS_SIM_POOL
+       TABLE   elev_stor
+         4718.0         0.0
+         4720.0        88.0
+         4722.0       375.0
+         4724.0       831.0
+         4726.0      1506.0
+         4728.0      2390.0
+         4730.0      3448.0
+         4732.0      4635.0
+         4734.0      5935.0
+         4736.0      7326.0
+         4738.0      8797.0
+         4740.0     10336.0
+         4742.0     11941.0
+         4744.0     13621.0
+         4746.0     15370.0
+         4748.0     17184.0
+         4750.0     19058.0
+         4752.0     20994.0
+         4754.0     22994.0
+         4756.0     25060.0
+         4758.0     27188.0
+         4760.0     29373.0
+         4762.0     31616.0
+         4764.0     33913.0
+         4766.0     36257.0
+         4768.0     38657.0
+         4770.0     41126.0
+         4772.0     43731.0
+         4774.0     46464.0
+         4776.0     49278.0
+         4778.0     52171.0
+         4780.0     55143.0
+         4782.0     58181.0
+         4784.0     61285.0
+         4786.0     64504.0
+         4788.0     67877.0
+         4790.0     71357.0
+         4792.0     74924.0
+         4794.0     78578.0
+         4796.0     82319.0
+         4798.0     86663.0
+         4800.0     90047.0
+         4802.0     94027.0
+         4804.0     98082.0
+         4806.0    102216.0
+         4808.0    106426.0
+         4810.0    110750.0
+      ENDTABLE 
+       MINPOOL          4718.0
+       INITIALPOOL      4754.26   
+       INITIALRELEASE    100.0        
+       INITIALWITHDRAW     0.0     
+       INITIALINFLOW    1369.0    
+       PREVIOUSRELEASE   100.0      
+       PREVIOUSPOOL     4754.26   
+       PREVIOUSWITHDRAW    0.0     
+       PREVIOUSINFLOW   1369.0     
+     ENDRESERVOIR
+
+#*************BEGIN METHOD DEFINITION************************
+
+
+  SETRELEASE  SHERBURNE  ZERO
+     VALUES
+     ELEV  4770   4780  4790  ENDELEV
+     01/01    0      0     0
+     12/31    0      0     0
+     ENDVALUES
+     INTERPOLATE ALL
+   ENDSETRELEASE
+
+  SETRELEASE  SHERBURNE  MAXRELS
+     VALUES
+     ELEV  4730   4750   4765  4790  ENDELEV
+     01/01  650    650    800   800
+     04/01  550    550    800   800
+     08/01  650    650    800   800
+     12/31  650    650    800   800
+     ENDVALUES
+   ENDSETRELEASE
+
+  SETELEVATION SHERBURNE  UPPER  
+    VALUES
+      01/01   4765.0
+      03/31   4770.0
+      06/15   4788.0
+      08/15   4788.0
+      09/15   4760.0
+      12/31   4765.0
+    ENDVALUES
+     INTERPOLATE ALL
+  ENDSETELEVATION UPPER
+
+  SETRELEASE  SHERBURNE  DEMAND
+     TSINPUT  OBSERVEDRELEASE  SCS_DEM_RELS
+     VALUES
+     ELEV  4718   4750  4775  4810  ENDELEV
+     01/01    0      0     0   550
+     02/28    0      0     0   550
+     03/01    0     10    20   550
+     04/01    0    300   500   550
+     09/15    0    300   500   550
+     10/01    0    200   500   550
+     11/01    0      5   100   550
+     12/31    0      5    10   550
+     ENDVALUES
+     INTERPOLATE ALL
+   ENDSETRELEASE
+
+   SETMAX   SHERBURNE  NORMAL
+      SETRELEASE   SHERBURNE  DEMAND
+      SETELEVATION SHERBURNE  UPPER
+   ENDSETMAX
+
+  SETMIN        SHERBURNE  NORMAL
+    SETMAX        SHERBURNE  NORMAL
+    SETRELEASE    SHERBURNE  MAXRELS
+  ENDSETMIN
+
+   SPILLWAY  SHERBURNE  FREE
+      TABLE  ELEV_SPILL
+         4788.0    0   
+         4788.5    120 
+         4789.0    280 
+         4789.5    520 
+         4790.0    850  
+         4790.5    1250
+         4791.0    1900
+         4792.0    4274     
+      ENDTABLE
+      INTERVALS 12
+      INITIALSPILL 0.0
+   ENDSPILLWAY
+
+
+  ADJUST SHERBURNE  ADJ_POOL
+    TSINPUT ObservedPool SCS_OBS_POOL
+    ADJSIM OFF
+  ENDADJUST
+
+#*************END METHOD DEFINITION************************
+
+ENDPARAMETERS
+
+RULES
+
+  [0>1]
+
+  ::SETRELEASE  SHERBURNE  ZERO
+
+
+  [TRUE]
+
+  ::SETMIN      SHERBURNE  NORMAL
+
+  ::SPILLWAY    SHERBURNE  FREE
+
+#  ::ADJUST SHERBURNE  ADJ_POOL
+
+ENDRULES
+ENDRES-J
+PLOT-TS    PLOT_PAN
+     SCS OUT_IN_WD_EL        3    3   10    0
+ ARIT            0.0    84.94     4
+  SCS      RQOT    6        SCS_OBSRLS      O
+  SCSSIMRL SQIN    6        SCS_SIMRLS      S
+  SCSINPOS RQIN    6        SCS_INFLOW      B
+  DEFICIT  SQIN    6        DEFICIT_REL     R
+ ARIT         1441.7     1460.    2
+  SCS      PELV    6        OBS_SCS_POOL    O
+  SCSSIMEL SPEL    6        SIM_SCS_POOL    S 
+ ARIT              0    84.94     4
+  CAPCDEM  SQIN    6        CAPPED_DEM      C
+  SMYM8    SQIN    6        SMYM8           U
+  STMARY   SQIN    6        STMARY          S  
+  DEFICIT  SQIN    6        DEFICIT         D
+MEAN-Q      SHERB  
+  SCSSIMRL SQIN    6  SCSSIMRL SQME   24
+MEAN-Q      DEFICIT
+  DEFICIT  SQIN    6  DEFICIT  SQME   24
+STAT-QME    SHERBURNE #---- Compare sim'd outflow to observed outflow
+SIM_SCS    OBS_SCS    10000.    SCSSIMRL SQME   24  SCS      RQME   24 1
+                           0.10 0.50 1.00 5.00 10.0 19.7
+STAT-QME    DEFICIT   #---- Compare sim'd outflow to observed outflow
+SIM_SCS    OBS_SCS    10000.    DEFICIT  SQME   24  SCS      RQME   24
+STOP

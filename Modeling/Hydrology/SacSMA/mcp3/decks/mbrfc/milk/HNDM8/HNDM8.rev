@@ -1,0 +1,263 @@
+HNDM8  Milk River Near Hinsdale, MT
+   10 1994    8 2003
+#   10 1980    9 2003   Simulation to make data available downstream
+#   10 1994    8 2003   Period with observed upstream diversions
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+3034       MAP     6            INPUT
+MAP/3034.MAP06
+3034       MAT     6            INPUT
+MAT/3034.MAT
+3034       SASC    6
+3034       SWE     6
+3034       RAIM    6
+3034       ROCL   24
+3034       SMZC   24
+3034       INFW    6
+# ----- Regulation Modeling -------------------------
+# Local diversions for 9.2 sqkm irrigation ignored for now
+# Diversions into Rock Creek Canal are currently ignored
+# ----- Upstream Return Flows -----------------------
+UPNELRET   SQIN    6            INPUT
+ReturnFlows/SNEL_HNDM8.RET.SQIN
+# Imports through Frenchman Canal
+UPFRDRET   SQIN    6            INPUT
+ReturnFlows/3022_HNDM8.RET.SQIN
+UPSTRRET   SQIN    6
+# ----- Observed Streamflow Observations ------------
+# No downstream data are available, use TMPM8 just
+# for comparison
+TMPM8      QME    24            INPUT
+TotQME/TMPM8.OBS.QME
+TMPM8      QIN     6
+SACM8      SQME   24            INPUT
+TotQME/SACM8.OBS.QME
+SACM8      SQIN    6
+SACM8RTD   SQIN    6
+ORHM8      SQIN    6            INPUT
+TotQINE/ORHM8.TOT.QINE
+ORHM8RTD   SQIN    6
+3033       SQIN    6            INPUT
+TotQINE/3033.TOT.SQIN
+3033RTD    SQIN    6
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# Diversions into Rock Creek Canal are currently ignored 
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            
+ROUTED     SQME   24            
+# ----- Computed Local Natural Flows ----------------
+# cannot be computed
+# ----- Simulated Local Natural Flows ---------------
+3034       SQIN    6
+3034       SQME   24            OUTPUT
+NatSQME/HNDM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+HNDM8      SQIN    6            OUTPUT
+TotQINE/HNDM8.TOT.SQIN
+HNDM8      SQME   24            OUTPUT
+TotSQME/HNDM8.TOT.SQME
+# ----- Simulated Augmentation to main stem----------
+AUGMAIN    SQIN    6            OUTPUT
+AUGMENT/HNDM8.AUG.SQIN
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval. The TMPM8 data are used
+## just for plotting.
+#
+CHANGE-T    TMPM8
+  TMPM8    QME    24  TMPM8    QIN     6
+#
+## Route the upstream SACM8 flow (simulated adjusted to observed)
+## Use upstream observation instead of SQIN because more data are available
+#
+CHANGE-T    SACM8
+  SACM8    SQME   24  SACM8    SQIN    6
+LAG/K       LK1-SACM8RTD
+SACM8    SQIN  6 SACM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+      12   0   3   700
+       6   0   1   700
+           0
+#
+## Route the upstream 3033 flow (simulated only)
+#
+LAG/K       LK2-3033
+3033     SQIN  6 3033RTD  SQIN  6     2     2 ENGL 0.00       0.0
+       3   0   1   700
+       2   0   1   700
+           0
+#
+## Route the upstream ORHM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK1-ORHM8RTD
+ORHM8    SQIN  6 ORHM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+      36   0   18   700
+      18   0    9   700            
+           0
+#
+## Route the return flows from Nelson Reservoir (Nelson South Canal)
+##(Equivalent recession coefficient of 500. is 0.048)
+#
+LAG/K       NELRETURN 
+UPNELRET SQIN  6                      0     0 ENGL    0         0
+      24.
+     500.
+         0
+#
+## Route the return flows from Frenchman Canal
+##(Equivalent recession coefficient of 500. is 0.048)
+#
+LAG/K       3022RETURN 
+UPFRDRET SQIN  6                      0     0 ENGL    0         0
+       6.
+     500.
+         0
+#
+## Sum the routed return flows
+#
+WEIGH-TS    WT0-RETURNROUTED
+    2       UPSTRRET SQIN    6
+UPFRDRET  SQIN       1.00
+UPNELRET  SQIN       1.00
+#
+## Compute the available part of the augmentation to the Milk 
+## main stem from tributaries and return flows
+#
+WEIGH-TS    WT1-AUGMAIN
+    3       AUGMAIN  SQIN    6
+ORHM8RTD  SQIN       1.00
+3033RTD   SQIN       1.00
+UPSTRRET  SQIN       1.00
+#
+## Compute routed flow
+## These will include the return flows from the areas irrigated through
+## upstream diversions in 3022 and NEL
+#
+WEIGH-TS    WT2-ROUTED
+    2       ROUTED   SQIN    6
+SACM8RTD  SQIN       1.00
+AUGMAIN   SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-3034      
+3034                 815.  41.            YES SUMS           RDCO
+    6  3034     MAP      1.000       3034     RAIM
+  3034     MAT     6      815.  0.0  0.0
+  3034     SWE     6            3034     SASC    6
+ 1.00 1.100.2000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .23  .39  .55  .70  .82  .89  .94  .97  .99
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3034    
+3034                         6  3034     RAIM       3034     INFW
+  3034     SASC    6  3034      3034     SUMS                FRZE
+                    1.0001.000 55.0 60.00.2800.0000.0000.010    0  .01
+                     20.0 2.00 180. 30.0 80.00.0800.0020.200 .300  .00
+                    0.390.621.192.493.844.735.404.923.231.840.820.47
+                      0.0  0.0   0.  0.0   0.   0.    0
+  3034     MAT     6                 3034     SWE     6
+0.1000.0800.050 0.00 -3.00.000  8.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3034 
+3034                          1095.   12           ENGL     0.000
+  3034     INFW    6  3034     SQIN    6
+    1075.3    6581.6   13674.9   18256.3   19126.5   17190.1   13898.6
+   10400.0    7335.2    4937.7    3200.7    2011.2		
+MEAN-Q      MQ4-3034
+  3034     SQIN    6  3034     SQME   24
+#
+## Finalize the augmented flows
+#
+WEIGH-TS    WT5-AUGMAIN
+    1       AUGMAIN  SQIN    6
+3034      SQIN       1.00
+#
+# --------------- Regulation Modeling ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Add Rock Creek Canal modelling if necessary 
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#
+#CHANLOSS    ROCKCREEKCANAL
+#ASSUMED LOSS         VARC
+#HNDM8   SQIN    6
+#    0.0       0.0       0.0       0.0      -0.3     -0.81
+#    -0.6      -0.3      -0.3      -0.3       0.0       0.0
+#
+#&& Replaced by modeling end
+#
+## Compute Simulated Downstream Flows
+## No return flows from locally irrigated lands to include
+#
+WEIGH-TS    WT11-SIMULATEDTOTALOBERVED
+    2       HNDM8    SQIN    6
+3034      SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ9-HNDM8
+  HNDM8    SQIN    6  HNDM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+## Not possible
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+## Not possible
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT1-HNDM8
+COMPARE LAG TO INST          3    1   10
+ ARIT   40         0        50   10           #--Routed flows  
+  TMPM8    QIN     6        DOWNSTR         d    # Observed total TMPM8!
+  HNDM8    SQIN    6        TOTALSIM        t    # Simulated total 
+  ORHM8    SQIN    6        ORHM8           o    # ORHM8 upstream 
+  ORHM8RTD SQIN    6        ORHM8RTD        1    # ORHM8 routed   
+  3033     SQIN    6        3033            b    # 3033 upstream 
+  3033RTD  SQIN    6        3033RTD         2    # 3033 routed   
+  SACM8    SQIN    6        SACM8           s    # SACM8 upstream 
+  SACM8RTD SQIN    6        SACM8RTD        3    # SACM8 routed   
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed plus upstream returns
+  UPSTRRET SQIN    6        UPSTRRETURNS    u    # Sum of upstream returns  
+#
+## Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+HNDM8                   1 SLOG     2834.  100  YES
+  3034     SQME        HNDM8_LOC       l
+  3034     RAIM    6            3034                3034     SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS            2834.    3034     SQME   24  3034     SQME   24
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+HNDM8                   4 SLOG    53280.   50  YES
+  TMPM8    QME         OBSRVD_TOT      o
+  HNDM8    SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  3034     SQME        HNDM8_LOC       l
+  3034     RAIM    6            3034                3034     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS           53280.    HNDM8    SQME   24  HNDM8    SQME   24
+STOP

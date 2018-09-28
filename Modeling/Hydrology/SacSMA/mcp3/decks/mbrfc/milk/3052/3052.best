@@ -1,0 +1,221 @@
+3052   Eastend Reservoir Local Area 
+   10 1948    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+# MAT and MAP data computed using incorrect basin boundaries!
+3052       MAP     6            INPUT
+MAP/3052.MAP06
+3052       MAT     6            INPUT
+MAT/3052.MAT
+3052       SASC    6
+3052       SWE     6
+3052       RAIM    6
+3052       INFW    6
+3052       ROCL   24
+3052       SMZC   24
+# ----- Observed Streamflow Observations ------------
+# Use observations from gage 11AC018 (above reservoir)
+# or 11AC052 (below reservoir) until reservoir
+# inflow data are ready
+3052       QME    24            INPUT
+TotQME/11AC018.OBS.QME
+#TotQME/11AC052.OBS.RQME
+3052       QIN     6
+# ----- Gaged Diversions ----------------------------
+# Exports to Cypress Lake 
+3052OBDEX  SQME   24            INPUT
+DQME/3052.OBS-EX.DQME
+3052OBDEX  SQIN    6
+3052OEXRD  SQIN    6
+# Imports from Cypress Lake 
+3052OBDIM  SQME   24            INPUT
+DQME/3052.OBS-IM.DQME
+3052OBDIM  SQIN    6
+3052OIMRD  SQIN    6
+# ----- Un-Gaged Diversions -------------------------
+3052DIV    SQIN    6
+3052DIV    SQME   24
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6
+ROUTED     SQME   24            OUTPUT
+DQME/3052.ROUTED
+# ----- Computed Local Natural Flows ----------------
+3052NAT    QME    24            OUTPUT
+NatQME/3052.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+3052LOC    SQIN    6
+3052LOC    SQME   24
+# ----- Simulated Total Observed Flows --------------
+3052TOT    SQIN    6
+3052TOT    SQME   24
+3052NOD    SQIN    6
+3052TOT    QINE    6            OUTPUT
+TotQINE/3052.TOT.QINE
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    3052
+  3052     QME    24  3052     QIN     6
+#
+## Compute routed exports
+# 
+CHANGE-T    3052OBDEX
+  3052OBDEXSQME   24  3052OBDEXSQIN    6
+LAG/K       LK1-3052OEXRD
+3052OBDEXSQIN  6 3052OEXRDSQIN  6     2     2 ENGL 0.00       0.0
+      36   0   18   100
+      36   0   12   100 
+           0
+#
+## Compute routed imports
+# 
+CHANGE-T    3052OBDIM
+  3052OBDIMSQME   24  3052OBDIMSQIN    6
+LAG/K       LK2-3052OIMRD
+3052OBDIMSQIN  6 3052OIMRDSQIN  6     2     2 ENGL 0.00       0.0
+      36   0   18   100
+      36   0   12   100 
+           0
+#
+## Compute routed flow
+#
+WEIGH-TS    WT1-ROUTED
+    2       ROUTED   SQIN    6
+3052OEXRD SQIN      -1.00
+3052OIMRD SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modelling
+#
+SNOW-17     SN1-UPR
+3052                1104.  45.            YES SUMS           RDCO
+    6  3052     MAP      1.000       3052     RAIM
+  3052     MAT     6     1104.  0.6  0.6
+  3052     SWE     6            3052     SASC    6
+ 1.50 1.100.3000.1509999.    0
+0.1500.2000.000 1.000.0500.100
+  .09  .22  .38  .49  .54  .57  .61  .66  .76
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+3052                         6  3052     RAIM       3052     INFW
+  3052     SASC    6  3052      3052     SUMS                FRZE
+                    1.0001.000 21.0 20.00.3000.0000.0000.010    0  .00
+                     80.0 1.95 95.0 45.0 70.00.1200.0050.300 .300  .00
+                    0.380.591.082.203.474.274.924.382.791.580.700.44
+                       1.  0.0   1.  0.0   1.   1.    0
+  3052     MAT     6                 3052     SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+# Unit hydrograph was replaced with new - rlk
+UNIT-HG     UH1-3052
+3052                           490.    8           ENGL     0.000
+  3052     INFW    6  3052LOC  SQIN    6
+    2111.5    8847.9   12585.7   11502.8    8250.2    5076.2    2809.8
+    1439.5                                        
+MEAN-Q      MQ1-3052LOC
+  3052LOC  SQIN    6  3052LOC  SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Total flow equals local flow plus the observed net import
+WEIGH-TS    WT1-SIMULATEDTOTAL
+    2       3052TOT  SQIN    6
+3052LOC   SQIN      1.00
+ROUTED    SQIN      1.00
+#
+# Save this time series
+#
+WEIGH-TS    WT2-SAVESIMULATEDTOTALNODIVERSION
+    1       3052NOD  SQIN    6
+3052TOT   SQIN       1.00
+#
+# Account for non-observed consumptive use
+#
+CHANLOSS    SFBM8
+ASSUMED LOSS         VARC
+3052TOT    SQIN    6
+     0.0       0.0       0.0       0.0       0.0       0.5
+     1.0       0.5       0.5       0.5       0.0       0.0
+MEAN-Q      MQ2-3052TOT
+  3052TOT  SQIN    6  3052TOT  SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  3052DIV  SQIN   6
+WEIGH-TS    WT3-ACTUALDIVERSION
+    2       3052DIV  SQIN    6
+3052NOD   SQIN      1.00
+3052TOT   SQIN     -1.00
+MEAN-Q      MQ3-ESTIMATEDDIVERSION
+  3052DIV  SQIN    6  3052DIV  SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-3052
+3052                   0    1    0
+3052       QME   24
+3052TOT    SQIN   6
+3052TOT    QINE   6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT3-LOCALNATURAL
+    3       3052NAT  QME    24
+3052      QME       1.00
+3052DIV   SQME      1.00
+ROUTED    SQME     -1.00
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT-3052
+COMPARE LAG TO INST          3    1    4
+ ARIT   40         0       200    4
+  3052     QIN     6        DOWNSTR         d
+  3052OBDEXSQIN    6        EXPORT          e
+  3052OBDIMSQIN    6        IMPORT          i
+  ROUTED   SQIN    6        ROUTEDDIV       r
+STAT-QME    LAG
+LAG ANALYSIS-3052       9999.9  ROUTED   SQME   24  3052     QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY1-LOCALNATURAL
+3052                    3 SLOG      490.   25  YES
+  3052NAT  QME        OBSERVEDNAT     n
+  3052LOC  SQME       SIMULATEDLOC    s
+  ROUTED   SQME       OBSERVEDDIV     d
+  3052     RAIM    6            3052                3052     SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             490.    3052LOC  SQME   24  3052NAT  QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+3052                    4 SLOG      490.   50  YES
+  3052     QME         OBSRVD_TOT      o
+  3052TOT  SQME        SIM_TOT         t
+  3052LOC  SQME        3052LOC         l
+  ROUTED   SQME        DIVERSION       d
+  3052     RAIM    6            3052                3052     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS             490.    3052TOT  SQME   24  3052     QME    24
+STOP

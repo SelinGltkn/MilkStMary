@@ -1,0 +1,256 @@
+CDLCode,CDLCategory,Class
+1,Corn,Crop
+2,Cotton,Crop
+3,Rice,Crop
+4,Sorghum,Crop
+5,Soybeans,Crop
+6,Sunflower,Crop
+7,,
+8,,
+9,,
+10,Peanuts,Crop
+11,Tobacco,Crop
+12,Sweet Corn,Crop
+13,Pop or Orn Corn,Crop
+14,Mint,Crop
+15,,
+16,,
+17,,
+18,,
+19,,
+20,,
+21,Barley,Crop
+22,Durum Wheat,Crop
+23,Spring Wheat,Crop
+24,Winter Wheat,Crop
+25,Other Small Grains,Crop
+26,Dbl Crop WinWht/Soybeans,Crop
+27,Rye,Crop
+28,Oats,Crop
+29,Millet,Crop
+30,Speltz,Crop
+31,Canola,Crop
+32,Flaxseed,Crop
+33,Safflower,Crop
+34,Rape Seed,Crop
+35,Mustard,Crop
+36,Alfalfa,Crop
+37,Other Hay/Non Alfalfa,Crop
+38,Camelina,Crop
+39,Buckwheat,Crop
+40,,
+41,Sugarbeets,Crop
+42,Dry Beans,Crop
+43,Potatoes,Crop
+44,Other Crops,Crop
+45,Sugarcane,Crop
+46,Sweet Potatoes,Crop
+47,Misc Vegs & Fruits,Crop
+48,Watermelons,Crop
+49,Onions,Crop
+50,Cucumbers,Crop
+51,Chick Peas,Crop
+52,Lentils,Crop
+53,Peas,Crop
+54,Tomatoes,Crop
+55,Caneberries,Crop
+56,Hops,Crop
+57,Herbs,Crop
+58,Clover/Wildflowers,Crop
+59,Sod/Grass Seed,Crop
+60,Switchgrass,Crop
+61,Fallow/Idle Cropland,Fallow Cropland
+62,Pasture/Grass,Pasture/Grass
+63,Forest,Forest
+64,Shrubland,Shrubland
+65,Barren,Barren
+66,Cherries,Crop
+67,Peaches,Crop
+68,Apples,Crop
+69,Grapes,Crop
+70,Christmas Trees,Crop
+71,Other Tree Crops,Crop
+72,Citrus,Crop
+73,,
+74,Pecans,Crop
+75,Almonds,Crop
+76,Walnuts,Crop
+77,Pears,Crop
+78,,
+79,,
+80,,
+81,Clouds/No Data,No Data
+82,Developed,Developed
+83,Water,Water
+84,,
+85,,
+86,,
+87,Wetlands,Wetland
+88,Nonag/Undefined,No Data
+89,,
+90,,
+91,,
+92,Aquaculture,Aquaculture
+93,,
+94,,
+95,,
+96,,
+97,,
+98,,
+99,,
+100,,
+101,,
+102,,
+103,,
+104,,
+105,,
+106,,
+107,,
+108,,
+109,,
+110,,
+111,Open Water,Open Water
+112,Perennial Ice/Snow ,Ice/Snow
+113,,
+114,,
+115,,
+116,,
+117,,
+118,,
+119,,
+120,,
+121,Developed/Open Space,Developed/Open Space
+122,Developed/Low Intensity,Developed/Low Intensity
+123,Developed/Med Intensity,Developed/Med Intensity
+124,Developed/High Intensity,Developed/High Intensity
+125,,
+126,,
+127,,
+128,,
+129,,
+130,,
+131,Barren,Barren
+132,,
+133,,
+134,,
+135,,
+136,,
+137,,
+138,,
+139,,
+140,,
+141,Deciduous Forest,Forest
+142,Evergreen Forest,Forest
+143,Mixed Forest,Forest
+144,,
+145,,
+146,,
+147,,
+148,,
+149,,
+150,,
+151,,
+152,Shrubland,Shrubland
+153,,
+154,,
+155,,
+156,,
+157,,
+158,,
+159,,
+160,,
+161,,
+162,,
+163,,
+164,,
+165,,
+166,,
+167,,
+168,,
+169,,
+170,,
+171,,
+172,,
+173,,
+174,,
+175,,
+176,Grassland/Pasture,Grassland/Pasture
+177,,
+178,,
+179,,
+180,,
+181,,
+182,,
+183,,
+184,,
+185,,
+186,,
+187,,
+188,,
+189,,
+190,Woody Wetlands,Wetland
+191,,
+192,,
+193,,
+194,,
+195,Herbaceous Wetlands,Wetland
+196,,
+197,,
+198,,
+199,,
+200,,
+201,,
+202,,
+203,,
+204,Pistachios,Crop
+205,Triticale,Crop
+206,Carrots,Crop
+207,Asparagus,Crop
+208,Garlic,Crop
+209,Cantaloupes,Crop
+210,Prunes,Crop
+211,Olives,Crop
+212,Oranges,Crop
+213,Honeydew Melons,Crop
+214,Broccoli,Crop
+215,,
+216,Peppers,Crop
+217,Pomegranates,Crop
+218,Nectarines,Crop
+219,Greens,Crop
+220,Plums,Crop
+221,Strawberries,Crop
+222,Squash,Crop
+223,Apricots,Crop
+224,Vetch,Crop
+225,Dbl Crop WinWht/Corn,Crop
+226,Dbl Crop Oats/Corn,Crop
+227,Lettuce,Crop
+228,,
+229,Pumpkins,Crop
+230,Dbl Crop Lettuce/Durum Wht,Crop
+231,Dbl Crop Lettuce/Cantaloupe,Crop
+232,Dbl Crop Lettuce/Cotton,Crop
+233,Dbl Crop Lettuce/Barley,Crop
+234,Dbl Crop Durum Wht/Sorghum,Crop
+235,Dbl Crop Barley/Sorghum,Crop
+236,Dbl Crop WinWht/Sorghum,Crop
+237,Dbl Crop Barley/Corn,Crop
+238,Dbl Crop WinWht/Cotton,Crop
+239,Dbl Crop Soybeans/Cotton,Crop
+240,Dbl Crop Soybeans/Oats,Crop
+241,Dbl Crop Corn/Soybeans,Crop
+242,Blueberries,Crop
+243,Cabbage,Crop
+244,Cauliflower,Crop
+245,Celery,Crop
+246,Radishes,Crop
+247,Turnips,Crop
+248,Eggplants,Crop
+249,Gourds,Crop
+250,Cranberries,Crop
+251,,
+252,,
+253,,
+254,Dbl Crop Barley/Soybeans,Crop
+255,,

@@ -1,0 +1,219 @@
+PEOM8  Peoples Creek nr Hays 16N
+   10 1965    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+PEOM8UP    MAP     6            INPUT
+MAP/peom8upr.MAP06
+PEOM8UP    MAT     6            INPUT
+MAT/peom8upr.MAT.adjusted
+PEOM8UP    SASC    6
+PEOM8UP    SWE     6
+PEOM8UP    RAIM    6
+PEOM8UP    INFW    6
+PEOM8UP    ROCL   24
+PEOM8UP    SMZC   24
+PEOM8UP    SQIN    6
+PEOM8UP    SQME   24
+PEOM8LO    MAP     6            INPUT
+MAP/peom8lwr.MAP06
+PEOM8LO    MAT     6            INPUT
+MAT/peom8lwr.MAT.adjusted
+PEOM8LO    SASC    6
+PEOM8LO    SWE     6
+PEOM8LO    RAIM    6
+PEOM8LO    INFW    6
+PEOM8LO    ROCL   24
+PEOM8LO    SMZC   24
+PEOM8LO    SQIN    6
+PEOM8LO    SQME   24
+3021       RAIM    6
+3021       INFW    6
+3021       ROCL   24
+3021       SMZC   24
+# ----- Regulation Modeling -------------------------
+# Local diversions for 6.1 sqkm irrigation ignored for now
+# ----- Upstream Return Flows -----------------------
+# None (Headwater without trans-basin diversions)
+# ----- Observed Streamflow Observations ------------
+PEOM8      QME    24            INPUT
+TotQME/PEOM8.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# Currently not modelled
+# ----- Sum of Routed Flows -------------------------
+# None (Headwater)
+# ----- Computed Local Natural Flows ----------------
+# Same as observed (No irrigation modelled)
+# ----- Simulated Local Natural Flows ---------------
+# Same as total (No irrigation modelled)
+# ----- Simulated Total Observed Flows --------------
+PEOM8      SQIN    6
+PEOM8      SQME   24
+PEOM8      QINE    6            OUTPUT
+TotQINE/PEOM8.TOT.QINE                                                 (6F10.2)
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+## Headwater: Not Applicable
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-UPR
+UP PEOM8 ABV 4000ft 1349.  45.            YES SUMS           RDCO
+    6  PEOM8UP  MAP      0.900       PEOM8UP  RAIM
+  PEOM8UP  MAT     6     1349.  0.6  0.6
+  PEOM8UP  SWE     6            PEOM8UP  SASC    6
+1.000 1.200.5000.1509999.    0
+0.1500.2000.000 1.000.0500.250
+  .30  .48  .63  .74  .82  .89  .94  .97  .99
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+UP PEOM8 ABV 4000ft          6  PEOM8UP  RAIM       PEOM8UP  INFW
+  PEOM8UP  SASC    6  PEOM8UP   PEOM8UP  SUMS                FRZE
+                    1.0001.000 50.0 75.00.4000.0000.0000.020    0  .12
+                     50.0 2.00 200. 100. 75.00.1000.0050.150 .300  .00
+                    0.570.830.972.253.314.264.964.543.011.750.680.62 
+                       1.  0.0   1.  0.0   1.   1.    0
+  PEOM8UP  MAT     6                 PEOM8UP  SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+SNOW-17     SN2-LWR
+LO PEOM8 BLW 4000ft 1000.  45.            YES SUMS           RDCO
+    6  PEOM8LO  MAP      0.900       PEOM8LO  RAIM
+  PEOM8LO  MAT     6     1000.  0.6  0.6
+  PEOM8LO  SWE     6            PEOM8LO  SASC    6
+1.000 1.200.5000.1509999.    0
+0.1500.2000.000 1.000.0500.250
+  .34  .54  .68  .78  .85  .89  .93  .96  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC2-LWR
+LO PEOM8 BLW 4000ft          6  PEOM8LO  RAIM       PEOM8LO  INFW
+  PEOM8LO  SASC    6  PEOM8LO   PEOM8LO  SUMS                FRZE
+                    1.0001.000 50.0 75.00.4000.0000.0000.020    0  .01
+                     50.0 2.00 200. 100. 75.00.1000.0050.150 .300  .00
+                    0.570.830.972.463.684.745.374.923.251.970.690.63 
+                       1.  0.0   1.  0.0   1.   1.    0
+  PEOM8UP  MAT     6                 PEOM8UP  SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+WEIGH-TS    WT1-SUMINFLO
+    2       3021     INFW    6
+PEOM8UP   INFW       0.25
+PEOM8LO   INFW       0.75
+WEIGH-TS    WE2
+    2       3021     RAIM    6
+PEOM8UP   RAIM       0.25
+PEOM8LO   RAIM       0.75
+WEIGH-TS    WE3
+    2       3021     ROCL   24
+PEOM8UP   ROCL       0.25
+PEOM8LO   ROCL       0.75
+WEIGH-TS    WE4
+    2       3021     SMZC   24
+PEOM8UP   SMZC       0.25
+PEOM8LO   SMZC       0.75
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3021
+3021                           229.    7           ENGL     0.000
+  3021     INFW    6  PEOM8    SQIN    6
+    1433.0    5276.2    6595.5    5296.9    3339.1    1804.9     878.2
+MEAN-Q      MQ1-3021    
+  PEOM8    SQIN    6  PEOM8    SQME   24
+#
+## The following operations compute the portion of the total Q from upper/lower areas
+#
+WEIGH-TS    WT2-UPPER
+    1       PEOM8UP  INFW    6
+PEOM8UP   INFW      0.25
+UNIT-HG     UH2-PEOM8
+PEOM8                          229.    7           ENGL     0.000
+  PEOM8UP  INFW    6  PEOM8UP  SQIN    6
+    1433.0    5276.2    6595.5    5296.9    3339.1    1804.9     878.2
+MEAN-Q      MQ2-PEOM8UP
+  PEOM8UP  SQIN    6  PEOM8UP  SQME   24
+WEIGH-TS    WT3-LOWER
+    1       PEOM8LO  INFW    6
+PEOM8LO   INFW      0.75
+UNIT-HG     UH3-PEOM8
+PEOM8                          229.    7           ENGL     0.000
+  PEOM8LO  INFW    6  PEOM8LO  SQIN    6
+    1433.0    5276.2    6595.5    5296.9    3339.1    1804.9     878.2
+MEAN-Q      MQ3-PEOM8LO
+  PEOM8LO  SQIN    6  PEOM8LO  SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#
+# Total flow equals local flow
+#
+#WEIGH-TS    WT10-SAVESIMULATEDTOTALNODIVERSION
+#    1       PEOM8 SQIN    6
+#3021      SQIN       1.00
+#
+# Account for consumptive use
+#
+#CHANLOSS    SFBM8
+#ASSUMED LOSS         VARC
+#PEOM8   SQIN    6
+#     0.0       0.0       0.0       0.0       0.0      0.0
+#     0.0       0.0       0.0       0.0       0.0      0.0
+#MEAN-Q      MQ4-PEOM8
+#  PEOM8 SQIN    6  PEOM8 SQME   24
+#
+# Compute the diversion that was actually possible
+#
+#CLEAR-TS
+#  PEOM8DIV SQIN    6
+#WEIGH-TS    WT10-ACTUALDIVERSION
+#    2       PEOM8DIV SQIN    6
+#3021      SQIN       1.00
+#PEOM8  SQIN      -1.00
+#MEAN-Q      MQ5-ESTIMATEDDIVERSION
+#  PEOM8DIV SQIN    6  PEOM8DIV SQME   24
+#&& Replaced by modeling end
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-PEOM8
+PEOM8                   0    1    0
+PEOM8      QME    24
+PEOM8      SQIN    6
+PEOM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+## Same as observations (irrigation is currently ignored)
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Natural Local Flows (equal Total Flows) 
+#
+WY-PLOT     WY1-LOCALNATURAL
+PEOM8                   2 SLOG      595.   25  YES
+  PEOM8    QME         OBSERVEDNAT     n
+  PEOM8    SQME        SIMULATEDLOC    s
+  3021     RAIM    6            3021                3021     SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             595.    PEOM8    SQME   24  PEOM8    QME    24
+WY-PLOT     WY2-COMPONENTS
+PEOM8                   4 SLOG      595.   25  YES
+  PEOM8    QME         OBSERVEDNAT     n
+  PEOM8    SQME        SIMULATEDLOC    s
+  PEOM8UP  SQME        UPPER_PORTION   u
+  PEOM8LO  SQME        LOWER_PORTION   l
+  3021     RAIM    6            3021                3021     SMZC
+PEAKFLOW   PEOM8
+instantaneous         06154400  PEOM8    SQIN
+    6    2    0    0    PEOM8.OBS.PEAK
+STOP

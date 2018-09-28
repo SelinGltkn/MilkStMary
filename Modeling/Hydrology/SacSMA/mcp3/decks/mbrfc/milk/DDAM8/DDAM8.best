@@ -1,0 +1,656 @@
+DDAM8  Milk River Nr Dodson, MT
+    7 1994   8 2003 
+#   10 1980    9 2004   Simulation to make data available downstream
+#   10 1983   9 2004   ENG Full streamflow data
+#   10 1980   9 2004  
+#    7 1994   8 2003  Full diversion data
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+3015       MAP     6            INPUT
+MAP/3015.MAP06
+3015       MAT     6            INPUT
+MAT/3015.MAT
+3015       SASC    6
+3015       SWE     6
+3015       RAIM    6            OUTPUT
+RAIM/3015.RAIM                                                         (6F10.2)
+3015       ROCL   24
+3015       SMZC   24
+3015       INFW    6
+# ----- Regulation Modeling ------------------------
+# For the local irrigation of 17 sqkm
+# For the diversions into the 
+#   Dodson North Canal
+#   Dodson South Canal
+# (serve a total of 96 sqkm irrgigated lands) 
+#   Nelson Feeder Canal - through Dodson South Canal
+#                       (inflows to Nelson Reservoir)
+# (serves or augments 167 sqkm irrgigated lands)
+#
+# Average MAT
+MAT        INFW    6            INTERNAL
+AVGMAT     SQIN    6            INTERNAL
+AVGMAT     MAT     6            INTERNAL
+# Consumptive use model
+UNLIMITD   SQME   24            INTERNAL
+REMAIN     SQME   24            INTERNAL
+RFIN       SQME   24            INTERNAL
+RFOUT      SQME   24            INTERNAL
+OTHLOSS    SQME   24            INTERNAL
+CROPDMD    SQME   24            INTERNAL
+CROPET     MAPE   24            INTERNAL
+# Consumptive use model estimate of diversion
+CUDIV      SQME   24            INTERNAL
+CUDIV      SQIN    6            INTERNAL
+# Precip sum
+SUMMAP     SQIN    6            INTERNAL
+PERCENT    DFAC    6            INTERNAL
+# Diversion reduced in high precip periods
+PCPNDIV    SQIN    6            INTERNAL
+PCPNDIV    SQME   24            INTERNAL
+# Julian date
+JULDATE    SQIN    6            INTERNAL
+CUTOFF     DFAC    6            INTERNAL
+# Diversion with clipped start/end 
+CLIPDDIV   SQME   24            INTERNAL
+# Minimum flow
+MINFLOW    SQIN    6            INTERNAL
+# Available to divert
+AVAIL      SQIN    6            INTERNAL
+AVAIL      SQME   24            INTERNAL
+# Excess diversion
+ABVLIM     SQIN    6            INTERNAL
+# Non-Nelson Diversions
+NONELSON   SQIN    6            INTERNAL
+NONELSON   SQME   24            INTERNAL
+# Final diversion
+DDAM8DIV   SQIN    6            INTERNAL
+DDAM8DIV   SQME   24            INTERNAL
+# Fraction of irrigation diversion that is gaged
+# (based on area)
+SIMGAGED   SQIN    6            INTERNAL
+SIMGAGED   SQME   24            INTERNAL
+# Diversion into the canals at headgates
+SIMCANAL   SQIN    6            INTERNAL
+SIMCANAL   SQME   24            INTERNAL
+# Return flow
+DIVLOSS    SQIN    6            INTERNAL
+ALLRETUR   SQIN    6            INTERNAL
+DDAM8RET   SQIN    6            OUTPUT
+ReturnFlows/DDAM8_DDAM8.RET.SQIN                                       (6F10.2)
+DDAM8RET   SQME   24            INTERNAL
+ALCM8RET   SQIN    6            OUTPUT
+ReturnFlows/DDAM8_ALCM8.RET.SQIN                                       (6F10.2)
+MALM8RET   SQIN    6            OUTPUT
+ReturnFlows/DDAM8_MALM8.RET.SQIN                                       (6F10.2)
+CRCM8RET   SQIN    6            OUTPUT
+ReturnFlows/DDAM8_CRCM8.RET.SQIN                                       (6F10.2)
+GSCM8RET   SQIN    6            OUTPUT
+ReturnFlows/DDAM8_GSCM8.RET.SQIN                                       (6F10.2)
+# ----- Nelson Inflow Modeling ----------------------
+AVAILNEL   SQIN    6            INTERNAL
+PERCENTN   DFAC    6            INTERNAL
+NELSON     SQIN    6            INTERNAL
+NELSON     SQME   24            INTERNAL
+NELSORTD   SQIN    6            OUTPUT
+SQIN/NEL.INFLOW.SQIN                                                   (6F10.2)
+NELSORTD   SQME   24            INTERNAL
+NELSON     PELV   24            INPUT
+PELV/NEL.PELV24
+MAXPOOL    SPEL   24            INTERNAL
+# ----- Upstream Return Flows -----------------------
+UPSTRRET   SQIN    6            INPUT
+ReturnFlows/HRLM8_DDAM8.RET.SQIN
+# ----- Observed Streamflow Observations ------------
+DDAM8      QME    24            INPUT
+TotQME/DDAM8.OBS.QME
+DDAM8      QIN     6
+HRLM8      SQIN    6            INPUT
+TotQINE/HRLM8.TOT.QINE
+HRLM8RTD   SQIN    6
+KHRM8      SQIN    6            INPUT
+TotQINE/KHRM8.TOT.QINE
+KHRM8RTD   SQIN    6
+# ----- Gaged Diversions ----------------------------
+DDAM8ODV   QME    24            INPUT
+DQME/DDAM8.OBS.DQME.FILLED
+DDAM8ODV   QIN     6
+NELINF     QME    24            INPUT
+RQIM/NELpos.QME24
+NELINF     QIN     6
+# Observed diversion not going to Nelson Reservoir
+DDAM8NNR   QIN     6
+DDAM8NNR   QME    24
+# ----- Un-Gaged Diversions -------------------------
+# not individually modelled 
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            
+ROUTED     SQME   24            
+# ----- Computed Local Natural Flows ----------------
+3015       QIN     6
+3015       QME    24            OUTPUT
+NatQME/DDAM8.LOC.NAT.QME                                               (6F10.2)
+# ----- Simulated Local Natural Flows ---------------
+3015       SQIN    6
+3015       SQME   24            OUTPUT
+NatSQME/DDAM8.LOC.NAT.SQME                                             (6F10.2)
+# ----- Simulated Total Observed Flows --------------
+DDAM8      SQIN    6
+DDAM8      SQME   24            OUTPUT
+TotSQME/DDAM8.TOT.SQME                                                 (6F10.2)
+DDAM8      QINE    6            OUTPUT
+TotQINE/DDAM8.TOT.QINE                                                 (6F10.2)
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    DDAM8
+  DDAM8    QME    24  DDAM8    QIN     6
+#
+## Route the upstream HRLM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK1-HRLM8
+HRLM8    SQIN  6 HRLM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+       30   0   36   700
+       24   0   30   700
+           0
+#
+## Route the upstream KHRM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK2-KHRM8
+KHRM8    SQIN  6 KHRM8RTD SQIN  6     0     0 ENGL 0.00       0.0
+       12
+       12
+           0
+#
+## Route the return flows from HRLM8
+##(Equivalent recession coefficient of 4800 is 0.005)
+#
+LAG/K       RETURN 
+UPSTRRET SQIN  6 UPSTRRET SQIN  6     0     0 ENGL    0         0
+       24.
+     4800.
+         0
+#
+## Compute routed flow
+## These include the return flows from the areas irrigated through
+## upstream diversions in HRLM8
+#
+WEIGH-TS    WT1-ROUTED
+    3       ROUTED   SQIN    6
+HRLM8RTD  SQIN       1.00
+KHRM8RTD  SQIN       1.00
+UPSTRRET  SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-3015     
+3015                 826.  41.            YES SUMS           RDCO
+    6  3015     MAP      1.000       3015     RAIM
+  3015     MAT     6      826.  0.6  0.6
+  3015     SWE     6            3015     SASC    6
+ 1.20 1.100.3000.1009999.    0
+0.1500.2000.000 1.000.0500.100
+  .10  .16  .25  .33  .41  .48  .55  .64  .74
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3015    
+3015                         6  3015     RAIM       3015     INFW
+  3015     SASC    6  3015      3015     SUMS                FRZE
+                    1.0001.000 30.0 50.00.4000.0000.0000.030    0  .00
+                     75.0 2.50 100. 45.0 80.00.1000.0050.300 .300  .00
+                    0.480.761.382.724.054.965.695.163.462.020.940.56
+                      1.2  1.2   1.  1.0   1.   1.    0
+  3015     MAT     6                 3015     SWE     6
+0.1000.0800.050 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3015 
+3015                           741.   11           ENGL     0.000
+  3015     INFW    6  3015     SQIN    6
+    1131.4    6295.2   11891.2   14431.9   13745.4   11230.8    8255.0
+    5615.6    3600.6    2203.5    1298.5	
+MEAN-Q      MQ4-3015    
+  3015     SQIN    6  3015     SQME   24
+#
+# --------------- Regulation Modeling ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Use CONS_USE model and adjustments to model the irrigation diversions. 
+#
+## Create an unlimited supply 
+#
+SET-TS      UNLIMITD
+  UNLIMITD SQME   24   99999999.0
+#
+## Take 7-day average MAT for input into CONS_USE model instead of 6-hour 
+## MAT. 
+#
+LOOKUP      AVG_MAT1
+    2    0
+3015      MAT      6
+MAT       INFW     6
+      -500.0      -500.0       500.0       500.0 
+UNIT-HG     AVG_MAT2
+AVERAGE MAT OVER 7 DAYS       0.0093  28           ENGL     0.000
+  MAT      INFW    6  AVGMAT   SQIN    6
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+LOOKUP      AVG_MAT3
+    2    0
+AVGMAT    SQIN     6
+AVGMAT    MAT      6
+      -500.0      -500.0       500.0       500.0 
+#
+## Consumptive Use Model (return flows turned off)
+## for the irrigation of 96 sqkm through gaged canals
+## and 17 sqkm ungaged lands
+## Diversions for Nelson Reservoir are modeled seperately
+#
+CONS_USE    DDAM8
+DDAM8 CONSUMPTIVE USE
+0
+AVGMAT MAT  UNLIMITD SQME
+REMAIN SQME CUDIV SQME
+RFIN SQME RFOUT SQME OTHLOSS SQME CROPDMD SQME CROPET MAPE
+ 48.0 113.  0.45 0.0
+0.00 0.00 0.00 0.40 0.50 0.60
+0.60 0.60 0.60 0.30 0.00 0.00
+    0.00     0.00     0.00
+CHANGE-T    CT2-CUDIV
+  CUDIV    SQME   24  CUDIV    SQIN    6
+#
+## Compute moving sum of RAIM 
+#
+UNIT-HG     SUMMAP
+SUM RAIM OVER 21 DAYS         0.5208  84           ENGL     0.000
+  3015     RAIM    6  SUMMAP   SQIN    6
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+#
+## Create a scaling time series, representing a fraction of the originally
+## computed diversion that will be diverted. If it rains more than 0.5 inches 
+## over 3 weeks, a reduction in the diversion begins, up to a maximum reduction 
+## of 90%.
+#
+LOOKUP      MAPPRCNT 
+    5    0
+SUMMAP    SQIN     6
+PERCENT   DFAC     6
+         0.0         1.0         0.5         1.0         4.5         0.2
+         5.2         0.1      1000.0         0.0
+#
+## Multiply the scaling factor times the diversion to reduce the diversion
+## in wet periods
+#
+MULT/DIV    MAPPRCNT
+  CUDIV    SQIN    6  PERCENT  DFAC    6
+  PCPNDIV  SQIN   1
+#
+## Use CHANLOSS, LOOKUP, and MULT/DIV to set the start and end dates for 
+## the demand
+#
+SET-TS      JULIAN  
+  JULDATE  SQIN    6          0.0
+CHANLOSS    JULIAN 
+CREATE JULIAN DATE   VARC
+JULDATE    SQIN    6
+      -15.      -46.      -74.     -105.     -135.     -166.
+     -196.     -227.     -258.     -288.     -319.     -349.
+SET-TS      CUTOFF  
+  CUTOFF   DFAC    6          0.0
+LOOKUP      DATECUT
+    4   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+          0.         0.0         61.         0.0         68.         1.0
+        306.         1.0        313.         0.0        349.         0.0  
+MULT/DIV    DATECUT
+  PCPNDIV  SQIN    6  CUTOFF   DFAC    6
+  NONELSON SQIN   1
+MEAN-Q      CLIPPED
+  NONELSON SQIN    6  CLIPDDIV SQME   24
+#
+## Set minimum flow requirement to limit diversions (based on calibration)
+## Note this only affects the amount diverted--no impact when diversion inactive
+#
+SET-TS      MINFLOW 
+  MINFLOW  SQIN    6          0.0
+CHANLOSS    MINFLOW
+MINIMUM FLOW         VARC                           0.0
+MINFLOW    SQIN    6
+    -10.00    -10.00     -2.00     -2.00     -0.50     -0.50
+     -0.50     -0.50     -0.00     -1.00     -1.00    -10.00
+#
+## Compute flow available to divert (supply limitation)
+#
+WEIGH-TS    WT9-AVAILABLETODIVERT
+    2       AVAIL    SQIN    6
+3015      SQIN       1.00
+ROUTED    SQIN       1.00
+ADD/SUB     AVAIL
+  AVAIL    SQIN    6  MINFLOW  SQIN    6  SUB     
+#
+## Take minimum of flow available and diversion
+#
+ADD/SUB     ABVLIM1
+  ABVLIM   SQIN    6  NONELSON SQIN    6  ADD 
+ADD/SUB     ABVLIM2
+  ABVLIM   SQIN    6  AVAIL    SQIN    6  SUB 
+ADD/SUB     ABVLIM3
+  NONELSON SQIN    6  ABVLIM   SQIN    6  SUB
+MEAN-Q      NONELSON 
+  NONELSON SQIN    6  NONELSON SQME   24
+#
+## Compute return flows (20% of diversions)
+## These will be applied in the irrigated areas
+#
+WEIGH-TS    RETURN
+    1       ALLRETUR SQIN    6
+NONELSON  SQIN       0.20
+#
+## Distribute the return flows to the receiving
+## areas:
+## DDAM8 (locally used):  17 sqkm ungaged
+##                        [15% of 113 sqkm served area]
+## ALCM8:                  3 sqkm of 113 sqkm [ 3%]
+## MALM8:                 59 sqkm of 113 sqkm [52%]
+## CRCM8:                 18 sqkm of 113 sqkm [16%]
+## GSCM8:                 16 sqkm of 113 sqkm [14%]
+#
+WEIGH-TS    DDAM8RET 
+    1       DDAM8RET SQIN    6
+ALLRETUR  SQIN       0.15
+WEIGH-TS    ALCM8RET 
+    1       ALCM8RET SQIN    6
+ALLRETUR  SQIN       0.03
+WEIGH-TS    MALM8RET 
+    1       MALM8RET SQIN    6
+ALLRETUR  SQIN       0.52
+WEIGH-TS    CRCM8RET 
+    1       CRCM8RET SQIN    6
+ALLRETUR  SQIN       0.16
+WEIGH-TS    GSCM8RET 
+    1       GSCM8RET SQIN    6
+ALLRETUR  SQIN       0.14
+#
+## Attenuate the local return flows
+##(Equivalent recession coefficient = 0.005)
+#
+LAG/K       LOCALRETURN 
+DDAM8RET SQIN  6 DDAM8RET SQIN  6     0     0 ENGL    0         0
+        0.
+     4800.
+         0
+MEAN-Q      DDAM8RET 
+  DDAM8RET SQIN    6  DDAM8RET SQME   24
+#
+# --------------- Nelson Inflow Modeling -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+#
+## Available diversion for Nelson Reservoir (at canal headgates) is the
+## total flow minus what is reserved for the irrigation diversions through
+## the Dodson Canals
+## (ignore local return flows)
+#
+WEIGH-TS    AVAILNEL 
+    2       AVAILNEL SQIN    6
+AVAIL     SQIN       1.00
+NONELSON  SQIN      -1.00
+#
+## Multiply the scaling factor times the diversion to reduce the diversion
+## in wet periods
+#
+LOOKUP      NELMAPPRCNT 
+    5    0
+SUMMAP    SQIN     6
+PERCENTN  DFAC     6
+         0.0         1.0         0.5         1.0         2.5         0.3
+         5.2         0.3      1000.0         0.0
+MULT/DIV    NELMAPPRCNT
+  AVAILNEL SQIN    6  PERCENTN DFAC    6
+  NELSON   SQIN   1
+#
+## Restrict the demand by the channel capacity (~11.3 cms from observations)
+#
+LOOKUP      CHANNELCAPACITY
+    3   -1
+NELSON    SQIN     6
+NELSON    SQIN     6
+          0.         0.0        11.3        11.3        500.        11.3
+#
+## Set the start and end dates for the demand
+#
+LOOKUP      NELDATECUT
+    6   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+          1.         0.0         61.         0.0         68.         1.0
+        305.         1.0        319.         0.0        366.         0.0        
+MULT/DIV    NELDATECUT
+  NELSON   SQIN    6  CUTOFF   DFAC    6
+  NELSON   SQIN   1
+MEAN-Q      NELSON   
+  NELSON   SQIN    6  NELSON   SQME   24
+#
+## Route the flows diverted for Nelson to the reservoir
+#
+LAG/K       LK0-NELSON
+NELSON   SQIN  6 NELSORTD SQIN  6     0     0 ENGL 0.00       0.0
+       99
+       33
+           0
+MEAN-Q      NELSORTD   
+  NELSORTD SQIN    6  NELSORTD SQME   24
+#
+## Compute Total Diversion (at outlet, includes non-gaged part and diversion for
+## Nelson at the canal headgates)
+#  
+WEIGH-TS    DIVERSIONTOTAL
+    2       DDAM8DIV SQIN    6
+NONELSON  SQIN       1.00
+NELSON    SQIN       1.00
+MEAN-Q      DDAM8DIV
+  DDAM8DIV SQIN    6  DDAM8DIV SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#
+#CHANLOSS    Dodson-DDAM8
+#ASSUMED LOSS         VARC
+#ROUTED     SQIN    6
+#     0.0       0.0       0.0       2.8      10.0      10.0
+#    10.0      13.0      11.0       2.8       0.4       0.0
+#
+#&& Replaced by modeling end
+#
+## Compute Simulated Downstream Flows
+## includes return flows from locally irrigated lands 
+#
+WEIGH-TS    WT9-SIMULATEDTOTAL
+    4       DDAM8    SQIN    6
+3015      SQIN       1.00
+ROUTED    SQIN       1.00
+DDAM8DIV  SQIN      -1.00
+DDAM8RET  SQIN       1.00
+MEAN-Q      MQ5-DDAM8   
+  DDAM8    SQIN    6  DDAM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-DDAM8
+DDAM8                   0    1    0
+DDAM8      QME    24
+DDAM8      SQIN    6
+DDAM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    4       3015     QIN     6
+DDAM8     QIN        1.00
+ROUTED    SQIN      -1.00
+DDAM8DIV  SQIN       1.00
+DDAM8RET  SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  3015     QIN     6  3015     QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT-ROUTING
+COMPARE LAG TO INST          3    1    3
+ ARIT   40         0       200    3
+  DDAM8    QIN     6        DOWNSTR         d
+  DDAM8    SQIN    6        DDAM8TOT        T
+  ROUTED   SQIN    6        ROUTED          r
+STAT-QME    LAG
+LAG ANALYSIS-DDAM8      9999.9  ROUTED   SQME   24  DDAM8    QME    24
+#
+## Compute the part of the observed Dodson Diversions that are not
+## inflows to Nelson Reservoir
+#
+CHANGE-T    CT1-DDAM8ODV
+  DDAM8ODV QME    24  DDAM8ODV QIN     6
+CHANGE-T    CT2-NELINF
+  NELINF   QME    24  NELINF   QIN     6
+ADD/SUB     AS1-DDAM8NNR
+  DDAM8NNR QIN     6  DDAM8ODV QIN     6
+ADD/SUB     AS2-DDAM8NNR
+  DDAM8NNR QIN     6  NELINF   QIN     6  SUB
+MEAN-Q      DDAM8NNR
+  DDAM8NNR QIN     6  DDAM8NNR QME    24
+#
+## Compute the fraction of the simulated diversion that is diverted
+## at the Dodson canals (85% of the total irrigated area)
+#
+WEIGH-TS    SIMGAGED
+    1       SIMGAGED SQIN    6
+NONELSON  SQIN       0.85
+MEAN-Q      SIMGAGED
+  SIMGAGED SQIN    6  SIMGAGED SQME   24
+#
+## Compute the total diversion at the canals (excludes local diversions)
+#
+WEIGH-TS    SIMCANAL
+    2       SIMCANAL SQIN    6
+SIMGAGED  SQIN       1.00
+NELSON    SQIN       1.00
+MEAN-Q      SIMCANAL
+  SIMCANAL SQIN    6  SIMCANAL SQME   24
+#
+## Diversions and Returns
+#
+PLOT-TS     TOT&DIV
+SIMULATED DIVERSIONS         3    6   23    0
+ ARIT   20         0       200    3           #--Total flow 
+  DDAM8    QIN     6        DOWNSTR         d    # Observed total
+  DDAM8    SQIN    6        TOTALSIM        t    # Simulated total
+  MINFLOW  SQIN    6        MINFLOW         m    # Minimum flow 
+ ARIT   20         0       200    7           #--Total flow components
+  DDAM8    QIN     6        DOWNSTR         d    # Observed total
+  DDAM8    SQIN    6        TOTALSIM        t    # Simulated total
+  3015     SQIN    6        LOCAL           l    # Local runoff
+  ROUTED   SQIN    6        UPSTREAM        u    # Sum of routed plus upstream returns
+  NONELSON SQIN    6        NONELSON        n    # Simulated diversion not for Nelson (subtract)
+  NELSON   SQIN    6        SIM NELSON IN   s    # Simulated Nelson inflow (subtract)
+  DDAM8DIV SQIN    6        DDAM8DIV        s    # Total simulated diversion (subtract)
+ ARIT   20         0        50    5            #--Irrigation diversion
+  DDAM8NNR QIN     6        DDAM8NNR        n    # Obs irrig diversion (Dodson obs div's not going to Nelson)
+  SIMGAGED SQIN    6        SIMGAGED        s    # Simulated irrigation diversion (fraction of total sim div)
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed plus upstream returns
+  AVAIL    SQIN    6        AVAILABLE       a    # Flow available to divert
+  CUDIV    SQIN    6        UNLIMITED       u    # CU diversion (unlimited by precip, available flow)
+ ARIT   20         0        50    5           #--Parts of the observed diversion
+  DDAM8ODV QIN     6        DODSONOBS       d    # Dodson observed diversion
+  SIMGAGED SQIN    6        SIMGAGED        s    # Simulated irrigation diversion (fraction of total sim div)
+  SIMCANAL SQIN    6        SIMCANAL        s    # Total simulated diversion in canal (at headgates)
+  NELSORTD SQIN    6        SIM NELSON IN   s    # Simulated Nelson inflow (routed to reservoir)
+  NELINF   QIN     6        NELSONINF       n    # Observed Nelson inflow (at reservoir)
+ ARIT   20         0       0.2    1            #--Sum of RAIM
+  SUMMAP   SQIN    6        MAP             m
+ ARIT   20         0         1    2            #--Percent reduction for precip
+  PERCENT  DFAC    6        REDUCTION       r
+  PERCENTN DFAC    6        REDUCTIONNEL    n
+STAT-QME    ST4-NONELSON DIVERSION
+DIVERSION NOT N         999.    SIMGAGED SQME   24  DDAM8NNR QME    24
+STAT-QME    ST5-GAGED DIVERSION
+GAGED DIVERSION         999.    SIMCANAL SQME   24  DDAM8ODV QME    24
+#
+## Just for plotting: Set the maximum pool at Nelson Reservoir
+#
+SET-TS      MAXPOOL
+  MAXPOOL  SPEL   24        677.0
+PLOT-TS     NELSONIN
+NELSON INFLOW                3    3    9    0
+ ARIT   20         0       28.    4           #--Nelson inflows
+  DDAM8ODV QIN     6        DODSONOBS       d    # Dodson observed diversion
+  NELINF   QIN     6        OBS NELSON IN   n    # Observed Nelson inflow (at reservoir)
+  AVAILNEL SQIN    6        AVAIL NELSON    a    # Available to divert for Nelson
+  NELSORTD SQIN    6        SIM NELSON IN   s    # Simulated Nelson inflow (routed to reservoir)
+ ARIT   20   670.527   677.233    2           #--Nelson pool   
+  NELSON   PELV   24        OBS POOL        p    # Observed Nelson pool
+  MAXPOOL  SPEL   24        MAX POOL        m    # Max Nelson pool
+ ARIT   20         0      200.    3           #--Streamflow
+  DDAM8    QIN     6        DOWNSTR         d    # Observed total
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed plus upstream returns
+  3015     SQIN    6        LOCAL           l    # Local runoff
+STAT-QME    ST6-NELSON INFLOW
+NELSON INFLOW           999.    NELSORTD SQME   24  NELINF   QME    24
+#
+## Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+DDAM8                   2 SLOG      742.  100  YES
+  3015     QME         OBSRVD_NAT      o
+  3015     SQME        DDAM8_LOC       l
+  3015     RAIM    6            3015                3015     SMZC
+STAT-QME    ST7-LOCALNATURAL
+LOCAL FLOWS             742.    3015     SQME   24  3015     QME    24
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+DDAM8                   5 SLOG    28730.   50  YES
+  DDAM8    QME         OBSRVD_TOT      o
+  DDAM8    SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  DDAM8DIV SQME        SIMDIV          s
+  3015     SQME        DDAM8_LOC       l
+  3015     RAIM    6            3015                3015     SMZC
+STAT-QME    ST8-TOTALOBSERVED
+TOTAL FLOWS           28730.    DDAM8    SQME   24  DDAM8    QME    24 1
+                           0.10 0.50 1.00 10.0 15.0 27.0
+PEAKFLOW   DDAM8
+instantaneous         06155030  DDAM8    SQIN
+    6    2    0    0    DDAM8.OBS.PEAK
+STOP

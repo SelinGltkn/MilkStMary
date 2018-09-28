@@ -1,0 +1,254 @@
+SCSM8 Sherburne Reservoir Local Areas
+   10 1978    9 2004
+#   10 1978    9 2004  To make data available downstream
+#   10 1982    9 2004  Available streamflow data
+DEF-TS
+# ----- Snow and Soil Modeling Data --------------
+SCSM8UP    MAP     6            INPUT
+MAP/scsm8upr.MAP06
+SCSM8UP    MAT     6            INPUT
+MAT/scsm8upr.MAT
+SCSM8UP    SASC    6
+SCSM8UP    SWE     6
+SCSM8UP    RAIM    6
+SCSM8UP    ROCL   24
+SCSM8UP    SMZC   24
+SCSM8UP    INFW    6
+SCSM8UP    SQIN    6
+SCSM8UP    SQME   24
+SCSM8LO    MAP     6            INPUT
+MAP/scsm8lwr.MAP06
+SCSM8LO    MAT     6            INPUT
+MAT/scsm8lwr.MAT
+SCSM8LO    SASC    6
+SCSM8LO    SWE     6
+SCSM8LO    RAIM    6
+SCSM8LO    ROCL   24
+SCSM8LO    SMZC   24
+SCSM8LO    INFW    6
+SCSM8LO    SQIN    6
+SCSM8LO    SQME   24
+3002       INFW    6
+3002       RAIM    6
+3002       ROCL   24
+3002       SMZC   24
+# ----- Regulation Modeling -------------------------
+# No local irrigation reported
+# ----- Upstream Return Flows -----------------------
+# None
+# ----- Observed Streamflow -------------------------
+SCSM8      QME    24            INPUT
+TotQME/SCSM8.COMP.RQIM
+SCSM8      QIN     6
+MGGM8      SQIN    6            INPUT
+TotQINE/MGGM8.TOT.QINE
+MGGM8RTD   SQIN    6
+MGGM8RTD   SQME   24
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# None
+# ----- Sum of Routed Flows -------------------------
+# Equal to MGGM8RTD   SQIN
+# ----- Computed Local Natural Flows ----------------
+3002       QIN     6
+3002       QME    24            OUTPUT
+NatQME/SCSM8.LOC.NAT.QME                                               (6F10.2)
+# ----- Simulated Local Natural Flows ---------------
+3002       SQIN    6
+3002       SQME   24            OUTPUT
+NatSQME/SCSM8.LOC.NAT.SQME                                             (6F10.2)
+# ----- Simulated Total Observed Flows --------------
+SCSM8      SQIN    6            
+SCSM8      SQME   24            OUTPUT
+TotSQME/SCSM8.TOT.SQME                                                 (6F10.2)            
+SCSM8      QINE    6            OUTPUT
+TotQINE/SCSM8.TOT.QINE                                                 (6F10.2)
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    SCSM8
+  SCSM8    QME    24  SCSM8    QIN     6
+#
+## Route the Upstream Releases from MGGM8
+#
+LAG/K       MGGM8
+MGGM8    SQIN  6 MGGM8RTD SQIN  6     3     3 ENGL 0.00       0.0
+      9.00   0    6.00    700   0.00    1050
+      9.00   0    6.00    700   0.00    1400
+           0
+MEAN-Q      MQ2-ROUTED
+  MGGM8RTD SQIN    6  MGGM8RTD SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-UPR
+UP SCSM8 ABV 6000ft 2162.  41.            YES SUMS           RDCO
+    6  SCSM8UP  MAP      1.000       SCSM8UP  RAIM
+  SCSM8UP  MAT     6     2262.  0.6  0.6
+  SCSM8UP  SWE     6            SCSM8UP  SASC    6
+ 1.00 0.800.2000.1009999.    0
+0.1500.1000.000 2.000.0200.400
+  .08  .13  .20  .31  .49  .67  .79  .87  .94
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+UP SCSM8 ABV 6000ft          6  SCSM8UP  RAIM       SCSM8UP  INFW
+  SCSM8UP  SASC    6  SCSM8UP   SCSM8UP  SUMS                FRZE
+                    1.0001.000 20.0 45.00.4000.0100.0000.000    0 .250
+                     55.0 2.50 70.0 125. 200.0.0600.0050.350 .300  .00
+                    0.430.470.921.872.943.213.423.292.190.810.440.40 
+                     18.0  1.0  70. 12.0  83.  90.    0
+  SCSM8UP  MAT     6                 SCSM8UP  SWE     6
+0.1000.0800.120 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+SNOW-17     SN2-LWR
+LO SCSM8 BLW 6000ft 1600. 41.0            YES SUMS           RDCO
+    6  SCSM8LO  MAP      1.000       SCSM8LO  RAIM
+  SCSM8LO  MAT     6     1700.  0.6  0.6
+  SCSM8LO  SWE     6            SCSM8LO  SASC    6
+ 1.00 1.100.4000.100 900.    0
+0.1500.1000.000 2.000.0200.400
+  .31  .52  .70  .79  .84  .89  .92  .95  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC2-LWR
+LO SCSM8 BLW 6000ft          6  SCSM8LO  RAIM       SCSM8LO  INFW
+  SCSM8LO  SASC    6  SCSM8LO   SCSM8LO  SUMS                FRZE
+                    1.0001.000 20.0 45.00.4000.0100.0000.000    0 .540
+                     55.0 2.50 70.0 125. 200.0.0600.0050.350 .300  .00
+                    0.430.470.922.073.343.713.923.792.491.110.440.40 
+                     18.0  1.0  70. 12.0  83.  90.    0
+  SCSM8LO  MAT     6                 SCSM8LO  SWE     6
+0.1000.0800.120 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+## Weighting of the Elevation Zones
+#
+WEIGH-TS    WT1-SUMINFLO
+    2       3002     INFW    6
+SCSM8UP   INFW       0.44
+SCSM8LO   INFW       0.56
+WEIGH-TS    WE2
+    2       3002     RAIM    6
+SCSM8UP   RAIM       0.44
+SCSM8LO   RAIM       0.56
+WEIGH-TS    WE3
+    2       3002     ROCL   24
+SCSM8UP   ROCL       0.44
+SCSM8LO   ROCL       0.56
+WEIGH-TS    WE4
+    2       3002     SMZC   24
+SCSM8UP   SMZC       0.44
+SCSM8LO   SMZC       0.56
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-SCSM8
+SCSM8                          34.6    2           ENGL     0.000
+  3002     INFW    6  3002     SQIN    6
+    3396.1     324.4
+MEAN-Q      MQ4-3002 LOC
+  3002     SQIN    6  3002     SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       SCSM8    SQIN    6
+3002      SQIN       1.00
+MGGM8RTD  SQIN       1.00
+MEAN-Q      MQ5-SCSM8   
+  SCSM8    SQIN    6  SCSM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-SCSM8
+SCSM8                   0    1    0
+SCSM8      QME    24
+SCSM8      SQIN    6
+SCSM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       3002     QIN     6
+SCSM8     QIN        1.00
+MGGM8RTD  SQIN      -1.00
+MEAN-Q      MQ1-LOCALNATURAL
+  3002     QIN     6  3002     QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT-SCSM8
+COMPARE LAG TO INST          3    1    4
+ ARIT   40         0       100    4           #--Routed flows 
+  SCSM8    QIN     6        DOWNSTR         d    # Observed total
+  SCSM8    SQIN    6        TOTALSIM        t    # Simulated total 
+  MGGM8    SQIN    6        UPSTR           u    # MGGM8 upstream
+  MGGM8RTD SQIN    6        ROUTED          r    # MGGM8 routed  
+STAT-QME    LAG
+LAG ANALYSIS-SCSM8      9999.9  MGGM8RTD SQME   24  SCSM8    QME    24
+#
+## Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+SCSM8                   2 SLOG      90.0   50  YES
+  3002     QME         OBSRVD_NAT      o
+  3002     SQME        SCSM8_LOC       l
+  3002     RAIM    6            3002                3002     SMZC
+STAT-QME    ST1-LOCALNATURAL
+LOCAL FLOWS             90.0    3002     SQME   24  3002     QME    24
+#
+## Additional Natural Local Flows: Plotting of Elevation Zone Components
+#
+WEIGH-TS    WT2-UPPER
+    1       SCSM8UP  INFW    6
+SCSM8UP   INFW      0.44
+UNIT-HG     UH2-SCSM8
+SCSM8                          34.6    3           ENGL     0.000
+  SCSM8UP  INFW    6  SCSM8UP  SQIN    6
+    3396.1     324.4
+MEAN-Q      MQ2-SCSM8UP
+  SCSM8UP  SQIN    6  SCSM8UP  SQME   24
+WEIGH-TS    WT3-LOWER
+    1       SCSM8LO  INFW    6
+SCSM8LO   INFW      0.56
+UNIT-HG     UH3-SCSM8
+SCSM8                          34.6    3           ENGL     0.000
+  SCSM8LO  INFW    6  SCSM8LO  SQIN    6
+    3396.1     324.4
+MEAN-Q      MQ3-SCSM8LO
+  SCSM8LO  SQIN    6  SCSM8LO  SQME   24
+WY-PLOT     WY2-COMPONENTS
+SCSM8                   4 SLOG      90.0  185  YES
+  3002     QME         OBSERVEDLOC     n
+  3002     SQME        SIMULATEDLOC    s
+  SCSM8UP  SQME        UPPER_PORTION   u
+  SCSM8LO  SQME        LOWER_PORTION   l
+  SCSM8UP  RAIM    6            SCSM8UP             SCSM8UP  SMZC
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+SCSM8                   2 SLOG      170.   50  YES
+  SCSM8    QME         OBSRVD_NAT      o
+  SCSM8    SQME        SCSM8_TOT       l
+  3002     RAIM    6            3002                3002     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS             170.    SCSM8    SQME   24  SCSM8    QME    24
+STOP

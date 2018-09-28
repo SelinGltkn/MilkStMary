@@ -1,0 +1,162 @@
+3010   Middle Crk Res nr Govenlock, SK
+   10 1948    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+3010       MAP     6            INPUT
+MAP/3010.MAP06
+3010       MAT     6            INPUT
+MAT/3010.MAT
+3010       SASC    6
+3010       SWE     6
+3010       RAIM    6
+3010       INFW    6
+3010       ROCL   24
+3010       SMZC   24
+# ----- Observed Streamflow Observations ------------
+# these flows are observed at the 11AB009 gage
+3010       QME    24            INPUT
+TotQME/11AB009.OBS.QME
+3010B      QME    24            INPUT
+TotQME/11AB001.OBS.QME.test
+# ----- Gaged Diversions ----------------------------
+# None
+EXPORTS    QME    24            INPUT
+DQME/3009.OBS.DQME
+# ----- Un-Gaged Diversions -------------------------
+3010DIV    SQIN    6
+3010DIV    SQME   24
+# ----- Sum of Routed Flows -------------------------
+# Headwater
+# ----- Computed Local Natural Flows ----------------
+3010NAT    QME    24            OUTPUT
+NatQME/3010.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+3010LOC    SQIN    6
+3010LOC    SQME   24
+11AB009    QME    24
+# ----- Simulated Total Observed Flows --------------
+3010TOT    SQIN    6
+3010TOT    SQME   24
+TEST       QINE    6
+3010TOT    QINE    6            OUTPUT
+TotQINE/3010.TOT.QINE
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modelling
+#
+SNOW-17     SN1-UPR
+3010                1187.  45.            YES SUMS           RDCO
+    6  3010     MAP      1.000       3010     RAIM
+  3010     MAT     6     1187.  0.6  0.6
+  3010     SWE     6            3010     SASC    6
+ 1.40 1.100.3000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .11  .19  .29  .43  .56  .64  .71  .79  .86
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+3010                         6  3010     RAIM       3010     INFW
+  3010     SASC    6  3010      3010     SUMS                FRZE
+                    1.0001.000 60.0 40.00.3000.0050.0000.005    0  .00
+                     60.0 2.70 135. 30.0 50.00.1000.0040.150 .300  .00
+                    0.380.601.092.103.334.144.854.272.771.580.700.44
+                       1.  0.0   1.  0.0   1.   1.    0
+  3010     MAT     6                 3010     SWE     6
+0.1000.0800.050 0.00 -3.00.200  8.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3010
+3010                           144.    5           ENGL     0.000
+  3010     INFW    6  3010LOC  SQIN    6
+    3261.6    6148.2    3934.2    1617.6     522.3
+MEAN-Q      MQ1-3010LOC
+  3010LOC  SQIN    6  3010LOC  SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Total flow equals local flow
+#
+WEIGH-TS    WT1-SAVESIMULATEDTOTALNODIVERSION
+    1       3010TOT  SQIN    6
+3010LOC   SQIN      1.00
+#
+# Account for non-observed consumptive use
+#
+CHANLOSS    3010
+ASSUMED LOSS         VARP
+3010TOT    SQIN    6
+     0.0       0.0       0.0       0.0       0.6       0.6
+     0.6       0.9      0.95       0.75      0.35      0.0
+MEAN-Q      MQ2-3010TOT
+  3010TOT  SQIN    6  3010TOT  SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  3010DIV  SQIN   6
+WEIGH-TS    WT2-ACTUALDIVERSION
+    2       3010DIV  SQIN    6
+3010LOC   SQIN      1.00
+3010TOT   SQIN     -1.00
+MEAN-Q      MQ3-ESTIMATEDDIVERSION
+  3010DIV  SQIN    6  3010DIV  SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-3010
+3010                   0    1    0
+3010       QME   24
+3010TOT    SQIN   6
+3010TOT    QINE   6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow (scale 11AB09 flows '3010 QME' by 1/0.82)
+#
+WEIGH-TS    WT3-LOCALNATURAL
+    2       3010NAT  QME    24
+3010      QME       1.22
+3010DIV   SQME      1.00
+#
+## Scale these flows to compare to 11AB009
+#
+WEIGH-TS    WT4-SCALETOOBS
+    1       11AB009  QME    24
+3010NAT   QME       0.82
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Natural Local Flows
+#
+WY-PLOT     WY1-LOCALNATURAL
+3010                    3 SLOG      373.   25  YES
+  3010NAT  QME        OBSERVEDNAT     n
+  3010LOC  SQME       SIMULATEDLOC    s
+  3010DIV  SQME       OBSERVEDDIV     d
+  3010     RAIM    6            3010                3010     SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             373.    3010LOC  SQME   24  3010NAT  QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTAL
+3010                    4 SLOG      373.   25  YES
+  3010     QME         OBSERVED        o
+  3010TOT  SQME        SIMULATED       s
+  EXPORTS  QME         DIVERSIONS      x
+  3010DIV  SQME        SIMDIVERS       *
+  3010     RAIM    6            3010                3010     SMZC
+STAT-QME    TOTAL         
+TOTAL FLOWS             373.    3010TOT  SQME   24  3010     QME    24
+STOP

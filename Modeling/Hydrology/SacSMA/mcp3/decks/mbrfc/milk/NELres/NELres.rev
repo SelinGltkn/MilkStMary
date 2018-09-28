@@ -1,0 +1,657 @@
+Nelson reservoir
+   10 1994    9 2003  ENG
+#
+DEF-TS
+NEL        PELV   24            INPUT         CARD
+PELV/NEL.PELV24
+NELNORTH   DQME   24            INPUT         CARD
+DQME/SACM8.OBS.DQME
+NELSOUTH   DQME   24            INPUT         CARD
+DQME/NelsonSouth.DQME
+NELINPOS   RQIM   24            INPUT
+RQIM/NELInPos.RQIM24
+NELINNEG   SQIN    6            INPUT
+RQIN/NELInNeg.RQIN06
+NELSEEP    DQME   24            INPUT
+DQME/NELSeepage.DQMEf
+# South Canal demand calculated in NELDE
+SOUTHDEM   SQIN    6            INPUT
+DEMAND/NELSS.DEMAND.SQIN
+# North Canal demand calculated in 3057DE
+NORTHDEM   SQIN    6            INPUT
+DEMAND/NELSN.DEMAND.SQIN
+NELSIMEL   SPEL    6            INTERNAL
+# Usage redefined.
+NELNORTH   RQOT    6
+NELSOUTH   RQOT    6
+NELINPOS   RQIN    6
+NEL        PELV    6
+# NELTOT is based on sum of observed 24-hr timeseries
+NELTOT     RQME   24
+NELTOT     RQOT    6
+NELSEEP    DQIN    6
+##### Start Timeseries from RES-J, first 6-hr then converted to 24-hr
+# Seepage
+NELSIMSP   SQIN    6            OUTPUT
+SQIN/NELSIMSP.SQIN06
+NELSIMSP   SQME   24
+# Outflow to Nelson North Canal
+NELSIMNO   SQIN    6            OUTPUT
+SQIN/NELSIMNO.SQIN06
+NELSIMNO   SQME   24
+# Outflow to South Canal
+NELSIMSO   SQIN    6            OUTPUT
+SQIN/NELSIMSO.SQIN06
+NELSIMSO   SQME   24
+##### End Timeseries from RES-J, first 6-hr then converted to 24-hr
+ZEROS      SQIN    6
+NELSIMGO   SQIN    6
+NELSIMGO   SQME   24
+# NELSUMRL is based on sum of observed 6-hr timeseries
+NELSUMRL   QIN     6
+NELSUMRL   QME    24
+# Return flows
+ALLRETUR   SQIN    6            INTERNAL
+SACM8RET   SQIN    6            OUTPUT
+ReturnFlows/SNEL_SACM8.RET.SQIN                                        (6F10.2)
+3033RET    SQIN    6            OUTPUT
+ReturnFlows/SNEL_3033.RET.SQIN                                         (6F10.2)
+HNDM8RET   SQIN    6            OUTPUT
+ReturnFlows/SNEL_HNDM8.RET.SQIN                                        (6F10.2)
+END
+############## ############## ##--Initialize some time series
+CLEAR-TS    ZEROIT1   #---- Create an empty time series
+  NELSIMSP SQIN    6
+#-------------------
+CLEAR-TS    ZEROIT2   #---- Create an empty time series
+  NELSIMNO SQIN    6
+#-------------------
+CLEAR-TS    ZEROIT3   #---- Create an empty time series
+  NELSIMSO SQIN    6
+#-------------------
+CLEAR-TS    ZEROIT4   #---- Create an empty time series
+  NELSIMEL SPEL    6
+#-------------------
+CLEAR-TS    ZEROIT5   #---- Create an empty time series
+  ZEROS    SQIN    6
+#-------------------
+CLEAR-TS    ZEROIT6   #---- Create an empty time series
+  NELSIMGO SQIN    6
+#-------------------
+CLEAR-TS    ZEROIT7   #---- Create an empty time series
+  NELTOT   RQME   24
+#-------------------
+CLEAR-TS    ZEROIT8   #---- Create an empty time series
+  NELSUMRL QIN     6
+############## ############## ##--Change from 24-hr to 6-hr
+CHANGE-T    NELIN     #---- Positive Inflow
+  NELINPOS RQIM   24  NELINPOS RQIN    6
+#-------------------
+CHANGE-T    NEL       #---- Observed Pool
+  NEL      PELV   24  NEL      PELV    6
+#-------------------
+RES-J       NELSON    #---- Nelson Reservoir                    #{
+ ################################################################{
+ TIMESERIES
+  TIMESTEP        06
+  ###### ######## #### ## ############
+  INPUT  ZEROS    SQIN 06 ZEROS        #Zero inflow for nodes
+  INPUT  NELINPOS RQIN 06 NEL_POSINFL  #COMPUTED POSITIVE INFLOWS
+  INPUT  NELINNEG SQIN 06 NEL_NEGINFL  #COMPUTED NEGATIVE INFLOWS
+  INPUT  NEL      PELV 06 NEL_OBS_POOL #OBSERVED POOL ELEVATION
+
+  INPUT  NORTHDEM SQIN 06 NEL_NORTH    #COMPUTED DEM. on N. Canal
+  INPUT  SOUTHDEM SQIN 06 NEL_SOUTH    #COMPUTED DEM. on S. Canal
+
+
+  OUTPUT NELSIMSP SQIN 06 SEEPAGE      #SIMULATED Seepage
+  OUTPUT NELSIMNO SQIN 06 NORTH_CANAL  #SIMULATED North Canal
+  OUTPUT NELSIMSO SQIN 06 SOUTH_CANAL  #SIMULATED South Canal
+  OUTPUT NELSIMEL SPEL 06 NEL_SIM_POOL #SIMULATED POOL ELEVATION
+ ENDTIMESERIES
+ ################################################################}
+
+ ################################################################{
+ TOPOLOGY
+  ############ ############ ##### ############ ##### ############
+  RESERVOIR    NELSON
+  NODE         NORTH_CANAL
+  NODE         SEEPAGE
+  NODE         JUNEJULY_OFF
+  NODE         RISINGPOOL
+  NODE         ROOT         BELOW JUNEJULY_OFF BELOW RISINGPOOL \
+                            BELOW NELSON \
+                            BELOW NORTH_CANAL  BELOW SEEPAGE
+ ENDTOPOLOGY
+ ################################################################}
+
+ ################################################################{
+ PARAMETERS
+  UNITS ENGLISH
+
+  ###### Start JUNEJULY_OFF trigger work. {
+  ############ ############{
+  NODE         JUNEJULY_OFF
+   #This node contains flows that trigger NELSON South Canal
+   # turnoff in late June, early July.
+   ######## ######## ############
+   TSINPUT  INFLOW   ZEROS
+   DISCHARGE         0.0
+   PREVIOUSDISCHARGE 0.0
+  ENDNODE
+  ############ ############}
+
+  ############ ############ ############{
+  LOOKUP3      JUNEJULY_OFF DEFAULT
+   TSINDEX   ROWS    NEL_SOUTH
+   COLUMNVAR JUNEJULY_OFF.STARTINGDISCHARGE
+   ROWVAR    INPUT_TS CFS
+   TABLEVAR  AUGMENTATION
+   VALUES
+           0 1000
+        0  0    0
+       50  0    0
+   ENDVALUES
+  ENDLOOKUP3
+  ############ ############ ############}
+
+  ############ ############ ############{
+  LOOKUP3      JUNEJULY_OFF TRIGGER
+   TSINDEX   ROWS    NEL_SOUTH
+   COLUMNVAR JUNEJULY_OFF.STARTINGDISCHARGE
+   ROWVAR    INPUT_TS CFS
+   TABLEVAR  AUGMENTATION
+   VALUES
+   #On the first time (JUNEJULY_OFF.STARTINGDISCHARGE==0):
+   # If the demand timeseries is pretty low, shutoff
+   #  (the trigger is set to 600).
+   # Otherwise, postpone shutting off by doing nothing
+   #  (the trigger remains at 0).
+   #A value of > 8 will result in shutoff.  The table is set up so
+   # that it progresses from 600 down to 590, 580, etc. until it
+   # reaches 10, then 6.  At 6 it remains until the end of the
+   # season.
+            0 1 10 20 600
+        0 600 6  6 10 590
+       50   0 6  6 10 590
+   #Note, we can shutoff with a zero value on this trigger if we
+   # are late enough in June or early July. (See the rules.)
+   ENDVALUES
+   INTERPOLATE COLUMNS
+  ENDLOOKUP3
+  ############ ############ ############}
+  ###### End JUNEJULY_OFF trigger work. }
+
+  ###### Start RISINGPOOL trigger work. {
+  ############ ############{
+  NODE         RISINGPOOL
+   #This node contains flows that trigger NELSON South Canal
+   # turnoff in late June, early July.
+   ######## ######## ############
+   TSINPUT  INFLOW   ZEROS
+   DISCHARGE         0.0
+   PREVIOUSDISCHARGE 0.0
+  ENDNODE
+  ############ ############}
+
+  ############ ############ ############{
+  LOOKUP3      RISINGPOOL   DEFAULT
+   TSINDEX   ROWS    NEL_SOUTH
+   COLUMNVAR RISINGPOOL.STARTINGDISCHARGE
+   ROWVAR    INPUT_TS CFS
+   TABLEVAR  AUGMENTATION
+   VALUES
+           0 1000
+        0  0    0
+       50  0    0
+   ENDVALUES
+  ENDLOOKUP3
+  ############ ############ ############}
+
+  ############ ############ ############{
+  LOOKUP3      RISINGPOOL   TRIGGER
+   COLUMNVAR NELSON.STARTINGPOOL - NELSON.PREVIOUSPOOL
+   ROWVAR    RISINGPOOL.STARTINGDISCHARGE
+   TABLEVAR  AUGMENTATION
+   VALUES
+       -0.3 -0.2 -0.1 0
+     0 -3   -2   -1   1
+    50  0   25   49  51
+   ENDVALUES
+   INTERPOLATE ROWS
+  ENDLOOKUP3
+  ############ ############ ############}
+
+  ###### End RISINGPOOL trigger work. }
+
+  ###### Start NELSON RESERVOIR work. {
+  ############ ############{
+  RESERVOIR NELSON
+   ######## ######## ############
+   TSINPUT  INFLOW   NEL_POSINFL
+   TSOUTPUT RELEASE  SOUTH_CANAL
+   TSOUTPUT POOL     NEL_SIM_POOL
+   TABLE   ELEV_STOR
+    2175.00        0.0
+    2176.00        2.0
+    2178.00      121.0
+    2180.00      485.0
+    2182.00     1121.0
+    2184.00     2034.0
+    2186.00     3229.0
+    2188.00     4683.0
+    2190.00     6346.0
+    2192.00     8191.0
+    2194.00    10209.0
+    2196.00    12487.0
+    2198.00    15128.0
+    2200.00    18140.0
+    2202.00    21500.0
+    2204.00    25184.0
+    2206.00    29194.0
+    2208.00    33580.0
+    2210.00    38337.0
+    2212.00    43615.0
+    2214.00    49865.0
+    2216.00    56816.0
+    2218.00    64291.0
+    2220.00    72225.0
+    2222.00    80696.0
+    2224.00    89825.0
+    2226.00    99661.0
+    2228.00   110213.0
+   ENDTABLE
+   MINPOOL          2200.0
+   MINRELEASE       0.00
+   INITIALPOOL      2212.71   # 10/01/1994
+   INITIALRELEASE   0.00
+   INITIALWITHDRAW  0.00
+   INITIALINFLOW    10.0
+   PREVIOUSRELEASE  0.00
+   PREVIOUSPOOL     2212.71   # 10/01/1994
+   PREVIOUSWITHDRAW 0.00
+   PREVIOUSINFLOW   10.0
+  ENDRESERVOIR
+  ############ ############}
+
+  ############ ############ ############{
+  SETWITHDRAW  NELSON       NEG_INFLOW
+   TSINPUT   OBSERVEDWITHDRAW  NEL_NEGINFL
+   VALUES
+    ELEV    2175.     2228.     ENDELEV
+    01-01   0.0       0.0
+   ENDVALUES
+   INTERPOLATE     ALL
+  ENDSETWITHDRAW
+  ############ ############ ############}
+  ############ ############ ############{
+  LOOKUP3      NELSON       SEEPAGE
+   COLUMNVAR NELSON.STARTINGPOOL
+   ROWVAR    NELSON.STARTINGPOOL
+   TABLEVAR  WITHDRAWAL
+   VALUES
+             2175. 2204.  2209. 2215. 2228.
+    2175.0      8     9     10    20    40
+    2228.0      8     9     10    20    40
+   ENDVALUES
+   INTERPOLATE COLUMNS
+   TOCOMP SEEPAGE      INSTANTANEOUS
+  ENDLOOKUP3
+  ############ ############ ############}
+  ############ ############ ############{
+  LOOKUP3      NELSON       NEL_NORTH
+   TSINDEX   COLUMNS NEL_NORTH
+   ROWVAR    DATE
+   COLUMNVAR INPUT_TS CFS
+   TABLEVAR  WITHDRAWAL
+   VALUES
+             0 10000
+    01/01    0  4520
+    06/10    0     0
+    07/01    0  4520
+   ENDVALUES
+   INTERPOLATE COLUMNS
+   TOCOMP NORTH_CANAL  INSTANTANEOUS
+  ENDLOOKUP3
+  ############ ############ ############}
+  ############ ############ ############{
+  SETSUM       NELSON       WITHDRAWALS
+   SETWITHDRAW  NELSON       NEG_INFLOW
+   LOOKUP3      NELSON       SEEPAGE
+   LOOKUP3      NELSON       NEL_NORTH
+  ENDSETSUM
+  ############ ############ ############}
+
+  ############ ############ ############{
+  LOOKUP3      NELSON       SDEM_BIASADJ
+   ROWVAR    DATE
+   TSINDEX   COLUMNS NEL_SOUTH
+   COLUMNVAR INPUT_TS CFS
+   TABLEVAR  RELEASE
+   VALUES
+          0.0 10000.0
+    01/01 0   10000
+    08/01 0    6000
+    09/01 0    5700
+    10/01 0   10000
+   ENDVALUES
+   INTERPOLATE COLUMNS
+  ENDLOOKUP3
+  ############ ############ ############}
+
+  ############ ############ ############{
+  LOOKUP3      NELSON       SOUTH_BREAK
+   TSINDEX   ROWS    NEL_SOUTH
+   COLUMNVAR JUNEJULY_OFF.ENDINGDISCHARGE
+   ROWVAR    INPUT_TS CFS
+   TABLEVAR  RELEASE
+   VALUES
+              1   100
+        0     0     0
+       50    10    10
+   ENDVALUES
+   INTERPOLATE ROWS
+  ENDLOOKUP3
+  ############ ############ ############}
+
+  ############ ############ ############{
+  SETRELEASE   NELSON       SOUTH_LOW_01
+   VALUES
+    ELEV   2215 2218 2220 ENDELEV
+    01/01     0    0    0
+    05/01     0    0    0
+    05/10     0   50  100
+    06/01     0  100  200
+   ENDVALUES
+   INTERPOLATE ALL
+  ENDSETRELEASE
+  ############ ############ ############}
+
+  ############ ############ ############{
+  SETRELEASE   NELSON       SOUTH_LOW_02
+   VALUES
+    ELEV   2175 2220 ENDELEV
+    01/01     0    0
+    06/01     0    0
+   ENDVALUES
+  ENDSETRELEASE
+  ############ ############ ############}
+
+  ############ ############ ############{
+  ADJUST       NELSON       ADJ_POOL
+   TSINPUT ObservedPool NEL_OBS_POOL
+   ADJSIM ON
+  ENDADJUST
+  ############ ############ ############}
+  ###### End NELSON RESERVOIR work. }
+
+  ############ ############{
+  NODE         NORTH_CANAL
+   #This node contains flows for North Canal.
+   ######## ######## ############
+   TSINPUT  INFLOW   ZEROS
+   TSOUTPUT OUTFLOW  NORTH_CANAL
+   DISCHARGE         0.0
+   PREVIOUSDISCHARGE 0.0
+  ENDNODE
+  ############ ############}
+
+  ############ ############{
+  NODE         SEEPAGE
+   #This node contains flows for Seepage
+   ######## ######## ############
+   TSINPUT  INFLOW   ZEROS
+   TSOUTPUT OUTFLOW  SEEPAGE
+   DISCHARGE         0.0
+   PREVIOUSDISCHARGE 0.0
+  ENDNODE
+  ############ ############}
+
+  ############ ############{
+  NODE         ROOT
+   #This node is only for RES-J construction purposes.
+   DISCHARGE         0.0
+   PREVIOUSDISCHARGE 0.0
+  ENDNODE
+  ############ ############}
+
+ ENDPARAMETERS
+ ################################################################}
+
+ ################################################################{
+ RULES
+
+  ########## Begin TRIGGER WORK {
+  # Set JUNEJULY_OFF trigger augmentation flows to 0
+  [TRUE]
+    ::LOOKUP3      JUNEJULY_OFF DEFAULT
+      ############ ############ ############
+
+  # During this date range, we may wish to set a trigger that will
+  # be used to reduce NELSON releases to South Canal, based on
+  # forecast (calculated) demand, and the value of the trigger at
+  # the previous timestep.
+  # Please see the method parameterization for further information
+  # on how the value is set and what it means.
+  [DATE >= 6/15 && DATE < 7/14]
+    ::LOOKUP3      JUNEJULY_OFF TRIGGER
+      ############ ############ ############
+
+  # Set RISINGPOOL trigger augmentation flows to 0
+  [TRUE]
+    ::LOOKUP3      RISINGPOOL   DEFAULT
+      ############ ############ ############
+
+  # During the date range and when NELSON pool is low,
+  # build a trigger that is dependent on whether the pool is rising
+  # or falling and how fast.
+  # The first timestep the pool is rising
+  # (starting - previous >= 0), the trigger is set to 1.
+  # As long as the pool continues to rise, we increment by 1 up to
+  # a value of 51.
+  # If we start to fall, we reduce the trigger based on how fast
+  # the pool is falling and how long we have been rising as
+  # measured by the trigger value.
+  [(DATE >= 04/15 && DATE < 05/10) && NELSON.STARTINGPOOL < 2219]
+    ::LOOKUP3      RISINGPOOL   TRIGGER
+      ############ ############ ############
+  ########## End TRIGGER WORK }
+
+  ########## Begin SEEPAGE and NORTH CANAL WORK {
+  # Both seepage and North Canal flows are handled as withdrawals
+  # from the reservoir, combined into one variable (by necessity).
+  # Each is withdrawn to a different Node where the values are
+  # clearly available independent of the other.
+  [TRUE]
+    ::SETSUM       NELSON       WITHDRAWALS
+       #SETWITHDRAW  NELSON       NEG_INFLOW
+       #LOOKUP3      NELSON       SEEPAGE
+       #LOOKUP3      NELSON       NEL_NORTH
+      ############ ############ ############
+  ########## End SEEPAGE and NORTH CANAL WORK }
+
+  ########## Begin SOUTH CANAL WORK {
+  # The following sets release values based on South Canal demand,
+  # slightly adjusted to reduce the overall bias between the
+  # original calculated demand and observed South Canal flows.
+  [TRUE]
+    ::LOOKUP3      NELSON       SDEM_BIASADJ
+      ############ ############ ############
+
+  # Look at the JUNEJULY_OFF trigger to determine if we have begun
+  # a reduction in South Canal flows.
+  # A non-zero value for the JUNEJULY_OFF.ENDINGDISCHARGE value
+  # signifies that the reduction has begun.
+  # A value greater than 8 signifies that it continues.
+  # A value of 6 signifies that it has ended.
+  # * If reduction of South Canal flows has begun, we will continue
+  # to set releases as a function of the trigger count-down and the
+  # previous release value.
+  # * If we have not begun the reduction, and we are very close to
+  # the end of June, we will begin the reduction without the
+  # trigger logic.
+  [JUNEJULY_OFF.ENDINGDISCHARGE > 8  || \
+   (JUNEJULY_OFF.ENDINGDISCHARGE < 4 && \
+    (DATE >= 6/29 && DATE < 7/09) \
+   ) \
+  ]
+    ::LOOKUP3      NELSON       SOUTH_BREAK
+      ############ ############ ############
+
+  # Under certain conditions, we will release less than the
+  # calculated South Canal demands.
+  # Please note that the construct:
+  # "NELSON.STARTINGPOOL > NELSON.PREVIOUSPOOL" has the capacity
+  # to introduce some minor oscillations.
+  [DATE >= 04/15 && \
+   ((DATE < 05/18 && NELSON.STARTINGPOOL < 2214) ||  \
+    (RISINGPOOL.ENDINGDISCHARGE > 3 &&               \
+     (DATE < 05/10 && NELSON.STARTINGPOOL < 2221)    \
+    ) \
+   )  \
+  ]
+    ::SETRELEASE   NELSON       SOUTH_LOW_01
+      ############ ############ ############
+
+  # Under certain other conditions, we will release 0.
+  [NELSON.STARTINGPOOL < 2206 || \
+   ((NELSON.PREVIOUSRELEASE < 0.01 && \
+     NELSON.STARTINGRELEASE < 0.01) && \
+    DATE >= 6/11 \
+   ) \
+  ]
+    ::SETRELEASE   NELSON       SOUTH_LOW_02
+      ############ ############ ############
+  ########## End SOUTH CANAL WORK }
+
+#  [TRUE]
+#      ############ ############ ############
+#    ::ADJUST       NELSON       ADJ_POOL
+
+ ENDRULES
+ ################################################################}
+
+ENDRES-J                                                        #}
+#-------------------
+############## ############## ##--Compute return flows from
+#                                 the South Canal
+#
+## Compute return flows (50% of diversions)
+## These will be applied in the irrigated areas
+#
+WEIGH-TS    RETURN
+    1       ALLRETUR SQIN    6
+NELSIMSO  SQIN       0.50
+#
+## Distribute the return flows to the receiving areas:
+## SACM8:      3.8 sqkm gaged of 87 sqkm served area [4%]
+##  3033:                66.8 sqkm gaged of 87 sqkm [77%]
+## HNDM8:                16.1 sqkm gaged of 87 sqkm [19%]
+#
+WEIGH-TS    SACM8RET
+    1       SACM8RET SQIN    6
+ALLRETUR  SQIN       0.04
+WEIGH-TS    3033RET
+    1       3033RET  SQIN    6
+ALLRETUR  SQIN       0.77
+WEIGH-TS    HNDM8RET
+    1       HNDM8RET SQIN    6
+ALLRETUR  SQIN       0.19
+############## ############## ##--Sim out-go from Reservoir
+ADD/SUB     NTOUTG1   #---- Add the north canal
+  NELSIMGO SQIN    6  NELSIMNO SQIN    6
+#-------------------
+ADD/SUB     NTOUTG2   #---- Add the south canal
+  NELSIMGO SQIN    6  NELSIMSO SQIN    6
+#-------------------
+ADD/SUB     NTOUTG3   #---- Add the seepage
+  NELSIMGO SQIN    6  NELSIMSP SQIN    6
+############## ############## ##--Obs out-go from Reservoir (24-hr)
+ADD/SUB     NTOUTG4   #---- Add the north canal
+  NELTOT   RQME   24  NELNORTH DQME   24
+#-------------------
+ADD/SUB     NTOUTG5   #---- Add the south canal
+  NELTOT   RQME   24  NELSOUTH DQME   24
+#-------------------
+ADD/SUB     NTOUTG6   #---- Add the seepage
+  NELTOT   RQME   24  NELSEEP  DQME   24
+############## ############## ##--Change from 24-hr to 6-hr
+CHANGE-T    NELTOT
+  NELTOT   RQME   24  NELTOT   RQOT    6
+#-------------------
+CHANGE-T    NELSEEP
+  NELSEEP  DQME   24  NELSEEP  DQIN    6
+#-------------------
+CHANGE-T    NELNORTH
+  NELNORTH DQME   24  NELNORTH RQOT    6
+#-------------------
+CHANGE-T    NELSOUTH
+  NELSOUTH DQME   24  NELSOUTH RQOT    6
+############## ############## ##--Total out-go from Reservoir
+#                                 (sum observed 6-hr series).
+#-------------------
+ADD/SUB     NTOUTG7   #---- Add the north canal
+  NELSUMRL QIN     6  NELNORTH RQOT    6
+#-------------------
+ADD/SUB     NTOUTG8   #---- Add the south canal
+  NELSUMRL QIN     6  NELSOUTH RQOT    6
+#-------------------
+ADD/SUB     NTOUTG9   #---- Add the seepage
+  NELSUMRL QIN     6  NELSEEP  DQIN    6
+############## ############## ##--Plot Results
+PLOT-TS     PLOT_PAN
+NEL      OUT_IN_WD_EL        3    5   14    0
+ ARIT   20       0.0    19.822    4
+  NELTOT   RQOT    6        NEL_OBSRLS      O
+  NELSIMGO SQIN    6        NEL_SIM_OUTGO   S
+  NELINPOS RQIN    6        NEL_INFLOW      B
+  NELINNEG SQIN    6        NEL_NEGINFL     N
+ ARIT   20       0.0    0.8495    2
+  NELSEEP  DQIN    6        NEL_SEEP        O
+  NELSIMSP SQIN    6        SEEPAGE         p
+ ARIT   20       0.0    8.4505    3
+  NELNORTH RQOT    6        NEL_NORTH       O
+  NELSIMNO SQIN    6        SIM_NORTH       n
+  NORTHDEM SQIN    6        DEMAND          D
+ ARIT   20       0.0    11.327    3
+  NELSOUTH RQOT    6        NEL_SOUTH       O
+  NELSIMSO SQIN    6        SIM_SOUTH       s
+  SOUTHDEM SQIN    6        DEMAND          D
+ ARIT   20       670      680.    2
+  NEL      PELV    6        OBS_NEL_POOL    O
+  NELSIMEL SPEL    6        SIM_NEL_POOL    S
+############## ############## ##--Change from 6-hr to 24-hr
+MEAN-Q      NNRELS1   #---- Sim'd North canal to 24-hr
+  NELSIMNO SQIN    6  NELSIMNO SQME   24
+#-------------------
+MEAN-Q      NSRELS1   #---- Sim'd South canal to 24-hr
+  NELSIMSO SQIN    6  NELSIMSO SQME   24
+#-------------------
+MEAN-Q      NSRELSP1  #---- Sim'd Seepage to 24-hr
+  NELSIMSP SQIN    6  NELSIMSP SQME   24
+#-------------------
+MEAN-Q      NTOUTG10  #---- Sim'd Total outflow to 24-hr
+  NELSIMGO SQIN    6  NELSIMGO SQME   24
+#-------------------
+MEAN-Q      NTOUTG11  #---- Obs'd, herein summed, Total outflow to 24-hr
+  NELSUMRL QIN     6  NELSUMRL QME    24
+############## ############## ##--Statistics
+STAT-QME    STAT_INF  #---- Negative inflows not considered here!
+OBS_IN   VS SIM_TOT   10000.    NELINPOS RQIM   24  NELSIMGO SQME   24
+#-------------------
+STAT-QME    STAT_FN1
+SIM_NOR  VS OBS_NOR   10000.    NELSIMNO SQME   24  NELNORTH DQME   24
+#-------------------
+STAT-QME    STAT_FN2
+SIM_SOU  VS OBS_SOU   10000.    NELSIMSO SQME   24  NELSOUTH DQME   24
+#-------------------
+STAT-QME    STAT_FN3
+SIM_SEEP VS OBS_SEEP  10000.    NELSIMSP SQME   24  NELSEEP  DQME   24
+#-------------------
+STAT-QME    STAT_FN4
+SIM_TOT1 VS OBS_TOT1  10000.    NELSIMGO SQME   24  NELTOT   RQME   24
+#-------------------
+STAT-QME    STAT_FN5
+SIM_TOT2 VS OBS_TOT2  10000.    NELSIMGO SQME   24  NELSUMRL QME    24
+#-------------------
+STOP

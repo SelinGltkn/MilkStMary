@@ -1,0 +1,210 @@
+FRENCHMAN RESERVOIR                                                      
+    6 1994    9 2004  ENGL
+DEF-TS
+FRDINPO    RQIN    6            INPUT         CARD
+TotQINE/3023.TOT.SQIN
+FRD        PELV   24            INPUT         CARD
+PELV/FRD.PELV24
+FRD        RQME   24            INPUT         CARD
+TotSQME/3023.TOT.SQME
+DEMANDTS   SQIN    6            INPUT
+DEMAND/FRD.DEMAND.SQIN
+SACM8      QME    24            INPUT
+TotQME/SACM8.OBS.QME
+DEMAND     SQIN    6
+SACM8      RQOT    6
+FRD        PELV    6
+FRDSIMEL   SPEL    6  
+FRDSIMRL   SQIN    6            OUTPUT
+SQIN/FRDRES.SIM.SQIN
+FRDORELS   RQOT    6
+FRD        SQIN    6
+END
+CHANGE-T    OBASACM8
+  SACM8    QME    24  SACM8    RQOT    6
+CHANGE-T    OBSPOOL
+  FRD      PELV   24  FRD      PELV    6
+LOOKUP      STORAGE   #---- Fill zeroes in demand TS with missing values 
+ 5       0
+DEMANDTS  SQIN     6
+DEMAND    SQIN     6
+ -10.0           -999.00         0.0     -999.00      0.0001      0.0001
+   1.0               1.0     10000.0     10000.0
+RES-J       FRENCHMAN                                           #{
+
+ ################################################################{
+  TIMESERIES
+     TIMESTEP        06
+  ###### ######## #### ## ############
+
+        INPUT   FRDINPO  RQIN 06 FRD_INFLOW   #COMPUTED INFLOWS
+#        INPUT   FRDINNEG SQIN 06 FRD_IN_NEGS  #COMPUTED NEGATIVE INFLOWS
+#        INPUT   FRD      PELV 06 FRD_OBS_POOL #OBSERVED POOL ELEVATION
+        INPUT   DEMANDTS SQIN 06 FRCNL_DEMAND #SIMULATED IRR DEMAND
+        OUTPUT  FRDSIMRL SQIN 06 FRD_SIM_REL  #SIMULATED RELEASE
+        OUTPUT  FRDSIMEL SPEL 06 FRD_SIM_POOL #SIMULATED POOL ELEVATION
+   ENDTIMESERIES
+
+   TOPOLOGY
+     RESERVOIR  FRENCHMAN
+   ENDTOPOLOGY
+ ################################################################}
+
+ ################################################################{
+   PARAMETERS
+   UNITS ENGLISH
+
+  ############ ############ ############{
+  # Begin Frenchman Parameters
+  ############ ############ ############{
+     RESERVOIR FRENCHMAN
+       TSINPUT inflow FRD_INFLOW  
+       TSOUTPUT release FRD_SIM_REL
+       TSOUTPUT pool FRD_SIM_POOL
+       TABLE   elev_stor
+        2247.00       0.0
+        2248.00       1.0    
+        2249.00       3.0    
+        2250.00       5.0    
+        2251.00       7.0    
+        2252.00       9.0    
+        2253.00      16.0    
+        2254.00      37.0    
+        2255.00     111.0    
+        2256.00     283.0    
+        2257.00     597.0    
+        2258.00     912.0    
+        2259.00    1226.0    
+        2260.00    1541.0    
+        2261.00    2010.0    
+        2262.00    2479.0    
+        2263.00    2949.0    
+        2264.00    3418.0    
+        2265.00    4019.0    
+        2266.00    4687.0    
+        2267.00    5355.0    
+        2268.00    6024.0    
+        2269.00    7026.0    
+        2270.00    8028.0    
+        2271.00    9030.0    
+        2272.00   10030.0    
+        2273.00   11030.0    
+        2274.00   12040.0    
+        2275.00   13040.0    
+       ENDTABLE 
+       MINPOOL          2255.0
+       MINRELEASE          0.0
+       INITIALPOOL      2260.0    
+       INITIALRELEASE   292.00        
+       INITIALWITHDRAW  000.00     
+       INITIALINFLOW    1369.00    
+       PREVIOUSRELEASE  292.00      
+       PREVIOUSPOOL     2265.0    
+       PREVIOUSWITHDRAW 000.00     
+       PREVIOUSINFLOW   1369.00    
+     ENDRESERVOIR
+  ############ ############ ############}
+
+#*************BEGIN METHOD DEFINITION************************
+
+
+  ############ ############ ############{
+  SETRELEASE  FRENCHMAN  ZERO  
+     VALUES
+     ELEV  2247   2260  2275  ENDELEV
+     01/01    0      0     0
+     12/31    0      0     0
+     ENDVALUES
+     INTERPOLATE ALL
+   ENDSETRELEASE
+  ############ ############ ############}
+
+  ############ ############ ############{
+  SETELEVATION FRENCHMAN  UPPER_BOUND
+    VALUES
+      01/01   2260.0
+      04/01   2264.6
+      06/30   2264.6
+      12/31   2260.0
+    ENDVALUES
+     INTERPOLATE ALL
+  ENDSETELEVATION 
+  ############ ############ ############}
+
+  ############ ############ ############{
+  SETRELEASE  FRENCHMAN  NORMAL 
+     TSINPUT  OBSERVEDRELEASE  FRCNL_DEMAND
+     VALUES
+     ELEV  2258   2264  2265  2275  ENDELEV
+     01/01  0.1     10   550   550
+     05/01  0.1     20   550   550
+     07/01  0.1     30   550   550
+     10/01  0.1     20   550   550
+     12/31  0.1     10   550   550
+     ENDVALUES
+     INTERPOLATE ALL
+   ENDSETRELEASE
+  ############ ############ ############}
+
+  ############ ############ ############{
+   SETMAX   FRENCHMAN  OPS    
+      SETRELEASE   FRENCHMAN  NORMAL 
+      SETELEVATION FRENCHMAN  UPPER_BOUND
+   ENDSETMAX
+  ############ ############ ############}
+
+  ############ ############ ############{
+   SPILLWAY  FRENCHMAN  FREE
+      TABLE  ELEV_SPILL
+         2264.6    0
+         2266.6    1375
+         2268.6    3900
+         2270.6    7150
+         2272.0    9500
+         2275.26   17500
+      ENDTABLE
+      INTERVALS 12
+      INITIALSPILL 0.0
+   ENDSPILLWAY
+  ############ ############ ############}
+
+  ############ ############ ############{
+#  ADJUST FRENCHMAN  ADJ_POOL
+#    TSINPUT ObservedPool FRD_OBS_POOL
+#    ADJSIM OFF
+#  ENDADJUST
+  ############ ############ ############}
+  # End Frenchman Parameters
+  ############ ############ ############}
+
+
+#*************END METHOD DEFINITION************************
+
+ENDPARAMETERS
+
+RULES
+
+  [0>1]
+       ############ ############ ############
+     ::SETRELEASE  FRENCHMAN  ZERO
+
+  [TRUE]
+       ############ ############ ############
+     ::SETMAX      FRENCHMAN  OPS    
+     ::SPILLWAY    FRENCHMAN  FREE
+  #  ::ADJUST FRENCHMAN  ADJ_POOL
+
+ENDRULES
+ ################################################################}
+
+ENDRES-J                                                        #}
+PLOT-TS     PLOT_PAN
+     FRD OUT_IN_WD_EL        3    2    5    0
+ ARIT            0.0    99.105    3
+  SACM8    RQOT    6        SAC_OBSRLS      O
+  FRDSIMRL SQIN    6        FRD_SIMRLS      S
+  FRDINPO  RQIN    6        FRD_INFLOW      B
+ ARIT         687.32    691.89    2
+  FRD      PELV    6        EST_OBS_POOL    O
+  FRDSIMEL SPEL    6        SIM_FRD_POOL    S 
+STOP

@@ -1,0 +1,173 @@
+NELDE Nelson Reservoir South Canal Demand
+   10 1980    9 2004  ENG
+#    5 1994    4 2004  ENG   Observed diversions
+#   10 1980    9 2004  ENG   Simulation to make data available
+DEF-TS
+# ----- Snow and Soil Modeling Data ----------------
+3033       MAP     6            INPUT
+MAP/3033.MAP06
+3033       MAT     6            INPUT
+MAT/3033.MAT
+# ----- Reservoir Data -----------------------------
+NEL        PELV   24            INPUT         CARD
+PELV/NEL.PELV24
+NEL        PELV    6
+# ----- Observed Time Series -----------------------
+NELSDMND   QME    24            INPUT         CARD
+DQME/NelsonSouth.DQME
+# ----- Regulation Modeling ------------------------              
+# Average MAT
+MAT        INFW    6            
+AVGMAT     SQIN    6            
+AVGMAT     MAT     6            
+# Consumptive use model
+UNLIMITD   SQME   24            
+REMAIN     SQME   24            
+RFIN       SQME   24            
+RFOUT      SQME   24            
+OTHLOSS    SQME   24            
+CROPDMD    SQME   24            
+CROPET     MAPE   24            
+# Consumptive use model estimate of diversion
+CUDIV      SQME   24            
+CUDIV      SQIN    6            
+# Precip sum
+SUMMAP     SQIN    6            
+PERCENT    DFAC    6            
+# Diversion reduced in high precip periods
+PCPNDIV    SQIN    6            
+PCPNDIV    SQME   24            
+# Julian date
+JULDATE    SQIN    6            
+CUTOFF     DFAC    6                     
+# Final diversion demand
+NELSDMND   SQIN    6            OUTPUT
+DEMAND/NELSS.DEMAND.SQIN                                               (6F10.2)            
+NELSDMND   SQME   24 
+END
+#
+# --------------- Irrigation Diversion Modeling ------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Use CONS_USE model and adjustments to model the irrigation diversions. 
+#
+## Create an unlimited supply 
+#
+SET-TS      UNLIMITD
+  UNLIMITD SQME   24   99999999.0
+#
+## Take 7-day average MAT for input into CONS_USE model instead of 6-hour 
+## MAT. 3033 is the most representative area.
+#
+LOOKUP      AVG_MAT1
+    2    0
+3033      MAT      6
+MAT       INFW     6
+      -500.0      -500.0       500.0       500.0 
+UNIT-HG     AVG_MAT2
+AVERAGE MAT OVER 7 DAYS       0.0093  28           ENGL     0.000
+  MAT      INFW    6  AVGMAT   SQIN    6
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+LOOKUP      AVG_MAT3
+    2    0
+AVGMAT    SQIN     6
+AVGMAT    MAT      6
+      -500.0      -500.0       500.0       500.0 
+#
+## Consumptive Use Model (return flows turned off)
+## for the irrigation of 87 sqkm through gaged canals
+#
+CONS_USE    DDAM8
+DDAM8 CONSUMPTIVE USE
+0
+AVGMAT MAT  UNLIMITD SQME
+REMAIN SQME CUDIV SQME
+RFIN SQME RFOUT SQME OTHLOSS SQME CROPDMD SQME CROPET MAPE
+ 48.5  87.  0.40 0.0
+0.00 0.00 0.00 0.40 0.70 0.50
+0.50 0.40 0.30 0.30 0.00 0.00
+    0.00     0.00     0.00
+CHANGE-T    CT2-CUDIV
+  CUDIV    SQME   24  CUDIV    SQIN    6
+#
+## Compute moving sum of MAP.  3033 is the most representative area.   
+#
+UNIT-HG     SUMMAP
+SUM MAP OVER 21 DAYS          0.5208  84           ENGL     0.000
+  3033     MAP     6  SUMMAP   SQIN    6
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+#
+## Create a scaling time series, representing a fraction of the originally
+## computed diversion that will be diverted. If it rains more than 0.5 inches 
+## over 3 weeks, a reduction in the diversion begins, up to a maximum reduction 
+## of 90%.
+#
+LOOKUP      MAPPRCNT 
+    5    0
+SUMMAP    SQIN     6
+PERCENT   DFAC     6
+         0.0         1.0         0.5         1.0         2.5         0.2
+         3.2         0.1      1000.0         0.0
+#
+## Multiply the scaling factor times the diversion to reduce the diversion
+## in wet periods
+#
+MULT/DIV    MAPPRCNT
+  CUDIV    SQIN    6  PERCENT  DFAC    6
+  PCPNDIV  SQIN   1
+#
+## Use CHANLOSS, LOOKUP, and MULT/DIV to set the start and end dates for 
+## the demand
+#
+SET-TS      JULIAN  
+  JULDATE  SQIN    6          0.0
+CHANLOSS    JULIAN 
+CREATE JULIAN DATE   VARC
+JULDATE    SQIN    6
+      -15.      -46.      -74.     -105.     -135.     -166.
+     -196.     -227.     -258.     -288.     -319.     -349.
+LOOKUP      DATECUT
+    6   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+          0.         0.0        115.         0.0        125.         1.0
+        284.         1.0        290.         0.0        365.         0.0        
+MULT/DIV    DATECUT
+  PCPNDIV  SQIN    6  CUTOFF   DFAC    6
+  NELSDMND SQIN   1
+MEAN-Q      CLIPPED
+  NELSDMND SQIN    6  NELSDMND SQME   24
+STOP
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+PLOT-TS     NELSON  
+     NELSON                  3    4    6    0
+ ARIT   20        0.       20.    3             
+  NELSDMND QME    24        NELSOUTH OBS    O                      
+  NELSDMND SQME   24        NELSOUTH SIM    S                       
+  CUDIV    SQME   24        INITIAL DIV     C
+ ARIT   20        0.       0.2    1
+  SUMMAP   SQIN    6        MAP             m    # Sum of RAIM       
+ ARIT   20        0.        1.    1
+  PERCENT  DFAC    6        REDUCTION       r    # Percent reduction for precip
+ ARIT   20      670.      680.    1
+  NEL      PELV   24        OBS_NEL_POOL    O
+STAT-QME    NELSOUTH      
+NELSON SOUTH              999.  NELSDMND SQME   24  NELSDMND QME    24
+STOP

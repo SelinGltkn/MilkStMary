@@ -1,0 +1,251 @@
+HNDM8  Milk River Near Hinsdale, MT
+   10 1994   9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+HNDM8      MAP     6            INPUT
+MAP/3034.MAP06
+HNDM8      MAT     6            INPUT
+MAT/3034.MAT
+HNDM8      SASC    6
+HNDM8      SWE     6
+HNDM8      RAIM    6
+HNDM8      ROCL   24
+HNDM8      SMZC   24
+HNDM8      INFW    6
+# ----- Observed Streamflow Observations ------------
+# No downstream data are available, use TMPM8 just
+# for comparison
+HNDM8      QME    24            INPUT
+TotQME/TMPM8.OBS.QME
+HNDM8      QIN     6
+SACM8      SQIN    6            INPUT
+TotQINE/SACM8.TOT.QINE
+SACM8RTD   SQIN    6
+ORHM8      SQIN    6            INPUT
+TotQINE/ORHM8.TOT.QINE
+ORHM8RTD   SQIN    6
+3033       SQIN    6            INPUT
+TotQINE/3033.TOT.SQIN
+3033RTD    SQIN    6
+# ----- Gaged Diversions ----------------------------
+# none
+# ----- Un-Gaged Diversions -------------------------
+# includes Rock Creek Canal
+HNDM8DIV   SQIN    6
+HNDM8DIV   SQME   24
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            
+ROUTED     SQME   24            
+# ----- Computed Local Natural Flows ----------------
+HNDM8NAT   QIN     6
+HNDM8NAT   QME    24            OUTPUT
+NatQME/HNDM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+HNDM8LOC   SQIN    6
+HNDM8LOC   SQME   24            OUTPUT
+NatSQME/HNDM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+HNDM8CONT  SQIN    6
+HNDM8CONT  SQME   24            OUTPUT
+LocCont/HNDM8.LOCCONT.SQME
+HNDM8TOT   SQIN    6            OUTPUT
+TotQINE/HNDM8.TOT.SQIN
+HNDM8NOD   SQIN    6
+HNDM8TOT   SQME   24            OUTPUT
+TotSQME/HNDM8.TOT.SQME
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    HNDM8
+  HNDM8    QME    24  HNDM8    QIN     6
+#
+## Route the upstream SACM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK1-SACM8RTD
+SACM8    SQIN  6 SACM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+      12   0   3   700
+       6   0   1   700
+           0
+#
+## Route the upstream 3033 flow (simulated only)
+#
+LAG/K       LK2-3033
+3033     SQIN  6 3033RTD  SQIN  6     2     2 ENGL 0.00       0.0
+       3   0   1   700
+       2   0   1   700
+           0
+#
+## Route the upstream ORHM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK1-ORHM8RTD
+ORHM8    SQIN  6 ORHM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+      36   0   18   700
+      18   0    9   700            
+           0
+#
+## Compute routed flow (exclude ORHM8 for now - need a 
+## a CHANLOSS for Rock Creek Canal there)
+#
+WEIGH-TS    WT1-ROUTED
+    2       ROUTED   SQIN    6
+SACM8RTD  SQIN       1.00
+3033RTD   SQIN       1.00
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-HNDM8     
+HNDM8                815.  41.            YES SUMS           RDCO
+    6  HNDM8    MAP      1.000       HNDM8    RAIM
+  HNDM8    MAT     6      815.  0.0  0.0
+  HNDM8    SWE     6            HNDM8    SASC    6
+ 1.00 1.100.2000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .23  .39  .55  .70  .82  .89  .94  .97  .99
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-HNDM8   
+HNDM8                        6  HNDM8    RAIM       HNDM8    INFW
+  HNDM8    SASC    6  HNDM8     HNDM8    SUMS                FRZE
+                    1.0001.000 55.0 60.00.2800.0000.0000.010    0  .01
+                     20.0 2.00 180. 30.0 80.00.0800.0020.200 .300  .00
+                    0.390.621.192.493.844.735.404.923.231.840.820.47
+                      0.0  0.0   0.  0.0   0.   0.    0
+  HNDM8    MAT     6                 HNDM8    SWE     6
+0.1000.0800.050 0.00 -3.00.000  8.0   0.   0.   0.
+  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-HNDM8
+HNDM8                         1095.   12           ENGL     0.000
+  HNDM8    INFW    6  HNDM8LOC SQIN    6
+    1075.3    6581.6   13674.9   18256.3   19126.5   17190.1   13898.6
+   10400.0    7335.2    4937.7    3200.7    2011.2		
+MEAN-Q      MQ4-HNDM8LOC
+  HNDM8LOC SQIN    6  HNDM8LOC SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Compute Simulated RockCreek Flows without diversion
+#
+WEIGH-TS    WT9-SIMULATEDROCKNODIVERSION
+    2       HNDM8TOT SQIN    6
+HNDM8LOC  SQIN       1.00
+ORHM8RTD  SQIN       1.00
+#
+# Save the routed time series
+#
+WEIGH-TS    WT10-SAVESIMULATEDROCKNODIVERSION
+    1       HNDM8NOD SQIN    6
+HNDM8TOT  SQIN       1.00
+#
+# Account for Rock Creek Cabal (and other ungaged diversions)
+#
+CHANLOSS    ROCKCREEKCANAL
+ASSUMED LOSS         VARC
+HNDM8TOT   SQIN    6
+     0.0       0.0       0.0       0.0      -0.3     -0.81
+    -0.6      -0.3      -0.3      -0.3       0.0       0.0
+MEAN-Q      MQ5-HNDM8TOT
+  HNDM8TOT SQIN    6  HNDM8TOT SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  HNDM8DIV SQIN    6
+WEIGH-TS    WT10-ACTUALDIVERSION
+    2       HNDM8DIV SQIN    6
+HNDM8NOD  SQIN       1.00
+HNDM8TOT  SQIN      -1.00
+MEAN-Q      MQ2-ESTIMATEDDIVERSION
+  HNDM8DIV SQIN    6  HNDM8DIV SQME   24
+#
+# Save contribution to the Milk main stem
+#
+WEIGH-TS    WT21-SAVELOCALFLOWS
+    1       HNDM8CONTSQIN    6
+HNDM8TOT  SQIN       1.00
+MEAN-Q      MQ21-HNDM8CONT
+  HNDM8CONTSQIN    6  HNDM8CONTSQME   24
+#
+# Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT11-SIMULATEDTOTALOBERVED
+    2       HNDM8TOT SQIN    6
+HNDM8TOT  SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ9-HNDM8TOT
+  HNDM8TOT SQIN    6  HNDM8TOT SQME   24
+#
+# Compute total of routed flows
+#
+WEIGH-TS    WT12-SIMULATEDROUTED
+    2       ROUTED   SQIN    6
+ORHM8RTD  SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ10-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    3       HNDM8NAT QIN     6
+HNDM8     QIN        1.00
+HNDM8DIV  SQIN       1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  HNDM8NAT QIN     6  HNDM8NAT QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT1-HNDM8
+COMPARE LAG TO INST          3    1    9
+ ARIT   40         0       200    9
+  HNDM8    QIN     6        DOWNSTR         d
+  ORHM8    SQIN    6        ORHM8           o
+  ORHM8RTD SQIN    6        ORHM8RTD        1
+  3033     SQIN    6        3033            b
+  3033RTD  SQIN    6        3033RTD         2
+  SACM8    SQIN    6        SACM8           s
+  SACM8RTD SQIN    6        SACM8RTD        3
+  ROUTED   SQIN    6        ROUTED          r
+  ROUTED   SQIN    6        ROUTED          r
+STAT-QME    LAG
+LAG ANALYSIS-HNDM8      9999.9  ROUTED   SQME   24  HNDM8    QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+HNDM8                   2 SLOG     2834.  100  YES
+  HNDM8NAT QME         OBSRVD_NAT      o
+  HNDM8LOC SQME        HNDM8_LOC       l
+  HNDM8    RAIM    6            HNDM8               HNDM8    SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS            2834.    HNDM8LOC SQME   24  HNDM8NAT QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+HNDM8                   5 SLOG    53280.   50  YES
+  HNDM8    QME         OBSRVD_TOT      o
+  HNDM8TOT SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  HNDM8LOC SQME        HNDM8_LOC       l
+  HNDM8DIV SQME        DIVERSION       d 
+  HNDM8    RAIM    6            HNDM8               HNDM8    SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS           53280.    HNDM8TOT SQME   24  HNDM8    QME    24
+STOP

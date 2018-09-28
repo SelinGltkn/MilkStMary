@@ -1,0 +1,205 @@
+HINM8  Frenchman River at Int. Boundary 
+   10 1964    9 2004
+#   10 1964    9 1995  Evaluation Period
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+HINM8      MAP     6            INPUT
+MAP/3024.MAP06
+HINM8      MAT     6            INPUT
+MAT/3024.MAT
+HINM8      SASC    6
+HINM8      SWE     6
+HINM8      RAIM    6
+HINM8      ROCL   24
+HINM8      SMZC   24
+HINM8      INFW    6
+# ----- Observed Streamflow Observations ------------
+HINM8      QME    24            INPUT
+TotQME/HINM8.OBS.QME
+HINM8      QIN     6
+3054       SQME   24            INPUT
+TotQME/3054.OBS.RQME.FILLED
+3054       SQIN    6
+3054RTD    SQIN    6
+# ----- Gaged Diversions ----------------------------
+# none at this time
+# ----- Un-Gaged Diversions -------------------------
+HINM8DIV   SQIN    6
+HINM8DIV   SQME   24
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            INTERNAL
+ROUTED     SQME   24            INTERNAL
+# ----- Computed Local Natural Flows ----------------
+HINM8NAT   QIN     6
+HINM8NAT   QME    24            OUTPUT
+NatQME/HINM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+HINM8LOC   SQIN    6
+HINM8LOC   SQME   24            OUTPUT
+NatSQME/HINM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+HINM8TOT   SQIN    6
+HINM8NOD   SQIN    6
+HINM8TOT   SQME   24            OUTPUT
+TotSQME/HINM8.TOT.SQME
+HINM8TOT   QINE    6            OUTPUT
+TotQINE/HINM8.TOT.QINE
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    HINM8
+  HINM8    QME    24  HINM8    QIN     6
+#
+## Route the upstream flow (simulated adjusted to observed)
+#
+CHANGE-T    3054
+  3054     SQME   24  3054     SQIN    6
+LAG/K       LK1-3054
+3054     SQIN  6 3054RTD  SQIN  6     2     2 ENGL 0.00       0.0
+       42   0   36   350  
+       21   0   18   350
+           0
+#
+## Compute routed flow
+#
+WEIGH-TS    WT1-ROUTED
+    1       ROUTED   SQIN    6
+3054RTD   SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-HINM8     
+HINM8                867.  41.            YES SUMS           RDCO
+    6  HINM8    MAP      1.000       HINM8    RAIM
+  HINM8    MAT     6      867.  0.6  0.6
+  HINM8    SWE     6            HINM8    SASC    6
+ 1.20 1.100.2000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .17  .29  .42  .57  .69  .77  .83  .88  .93
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-HINM8   
+HINM8                        6  HINM8    RAIM       HINM8    INFW
+  HINM8    SASC    6  HINM8     HINM8    SUMS                FRZE
+                    1.0001.000 45.0 60.00.2800.0000.0000.010    0  .00
+                     20.0 2.00 130. 30.0 80.00.0800.0020.200 .300  .00
+                    0.390.621.182.473.814.695.314.813.171.780.780.46 
+                      5.0  0.0  20.  0.0  10.  25.    0
+  HINM8    MAT     6                 HINM8    SWE     6
+0.1000.0800.050 0.00 -3.00.050  8.0   0.   0.   0.
+  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-HINM8
+HINM8                         769.0    9           ENGL     0.000
+  HINM8    INFW    6  HINM8LOC SQIN    6
+    2175.6   10360.9   16749.4   17397.7   14181.5    9916.8    6238.3
+    3631.9    1993.0
+MEAN-Q      MQ4-HINM8LOC
+  HINM8LOC SQIN    6  HINM8LOC SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Compute Simulated Downstream Flows without diversion
+#
+WEIGH-TS    WT9-SIMULATEDTOTALNODIVERSION
+    2       HINM8TOT SQIN    6
+HINM8LOC  SQIN       1.00
+ROUTED    SQIN       1.00
+#
+# Save this time series
+#
+WEIGH-TS    WT10-SAVESIMULATEDTOTALNODIVERSION
+    1       HINM8NOD SQIN    6
+HINM8TOT  SQIN       1.00
+#
+# Account for consumptive use (from total flows)
+#
+CHANLOSS    HINM8
+ASSUMED LOSS         VARC
+HINM8TOT   SQIN    6
+     0.0       0.0       0.0       0.0       0.0       0.0
+     0.0       0.0       0.0       0.0       0.0       0.0
+MEAN-Q      MQ5-HINM8TOT
+  HINM8TOT SQIN    6  HINM8TOT SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  HINM8DIV SQIN    6
+WEIGH-TS    WT10-ACTUALDIVERSION
+    2       HINM8DIV SQIN    6
+HINM8NOD  SQIN       1.00
+HINM8TOT  SQIN      -1.00
+MEAN-Q      MQ2-ESTIMATEDDIVERSION
+  HINM8DIV SQIN    6  HINM8DIV SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-HINM8
+HINM8                   0    1    0
+HINM8      QME    24
+HINM8TOT   SQIN    6
+HINM8TOT   QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    3       HINM8NAT QIN     6
+HINM8     QIN        1.00
+HINM8DIV  SQIN       1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  HINM8NAT QIN     6  HINM8NAT QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT-HINM8
+COMPARE LAG TO INST          3    1    3
+ ARIT   40         0       200    3
+  HINM8    QIN     6        DOWNSTR         d
+  3054     SQIN    6        UPSTR           3
+  ROUTED   SQIN    6        ROUTED          r
+STAT-QME    LAG
+LAG ANALYSIS-HINM8      9999.9  ROUTED   SQME   24  HINM8    QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+HINM8                   2 SLOG     1991.  100  YES
+  HINM8NAT QME         OBSRVD_NAT      o
+  HINM8LOC SQME        HINM8_LOC       l
+  HINM8    RAIM    6            HINM8               HINM8    SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS            1991.    HINM8LOC SQME   24  HINM8NAT QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+HINM8                   5 SLOG     5342.   50  YES
+  HINM8    QME         OBSRVD_TOT      o
+  HINM8TOT SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  HINM8LOC SQME        HINM8_LOC       l
+  HINM8DIV SQME        DIVERSION       d
+  HINM8    RAIM    6            HINM8               HINM8    SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS            5342.    HINM8TOT SQME   24  HINM8    QME    24
+STOP

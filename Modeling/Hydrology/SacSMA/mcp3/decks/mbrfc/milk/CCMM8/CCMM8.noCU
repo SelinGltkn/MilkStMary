@@ -1,0 +1,228 @@
+CCMM8  Clear Cr. nr Chinook MT
+   10 1980    9 2004
+#   10 1983    9 2004 Evaluation period
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+CCMM8UP    MAP     6            INPUT
+MAP/ccmm8upr.MAP06
+CCMM8UP    MAT     6            INPUT
+MAT/ccmm8upr.MAT
+CCMM8UP    SASC    6
+CCMM8UP    SWE     6
+CCMM8UP    RAIM    6
+CCMM8UP    INFW    6
+CCMM8UP    ROCL   24
+CCMM8UP    SMZC   24
+CCMM8UP    SQIN    6
+CCMM8UP    SQME   24
+CCMM8LO    MAP     6            INPUT
+MAP/ccmm8lwr.MAP06
+CCMM8LO    MAT     6            INPUT
+MAT/ccmm8lwr.MAT
+CCMM8LO    SASC    6
+CCMM8LO    SWE     6
+CCMM8LO    RAIM    6
+CCMM8LO    INFW    6
+CCMM8LO    ROCL   24
+CCMM8LO    SMZC   24
+CCMM8LO    SQIN    6
+CCMM8LO    SQME   24
+CCMM8      RAIM    6
+CCMM8      INFW    6
+CCMM8      ROCL   24
+CCMM8      SMZC   24
+# ----- Observed Streamflow Observations ------------
+CCMM8      QME    24            INPUT
+TotQME/CCMM8.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+CCMM8DIV   SQIN    6
+CCMM8DIV   SQME   24
+# ----- Sum of Routed Flows -------------------------
+# Headwater
+# ----- Computed Local Natural Flows ----------------
+CCMM8NAT   QME    24            OUTPUT
+NatQME/CCMM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+CCMM8LOC   SQIN    6
+CCMM8LOC   SQME   24
+# ----- Simulated Total Observed Flows --------------
+CCMM8TOT   SQIN    6
+CCMM8TOT   SQME   24
+CCMM8TOT   QINE    6            OUTPUT
+TotQINE/CCMM8.TOT.QINE
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-UPR
+UP CCMM8 ABV 4000ft 1406.  45.            YES SUMS           RDCO
+    6  CCMM8UP  MAP      1.000       CCMM8UP  RAIM
+  CCMM8UP  MAT     6     1406.  0.6  0.6
+  CCMM8UP  SWE     6            CCMM8UP  SASC    6
+0.950 1.000.5000.1509999.    0
+0.1500.2000.000 1.000.0500.200
+  .28  .41  .55  .65  .73  .79  .84  .90  .94
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+UP CCMM8 ABV 4000ft          6  CCMM8UP  RAIM       CCMM8UP  INFW
+  CCMM8UP  SASC    6  CCMM8UP   CCMM8UP  SUMS                FRZE
+                    1.0001.000 70.0 40.00.4000.0000.0000.040    0  .22
+                     100. 2.00 200. 60.0 100.0.1000.0060.200 .300  .00
+                    0.580.840.922.123.133.914.714.362.921.610.650.59 
+                       1.  0.0   1.  0.0   1.   1.    0
+  CCMM8UP  MAT     6                 CCMM8UP  SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+SNOW-17     SN2-LWR
+LO CCMM8 BLW 4000ft 1016.  45.            YES SUMS           RDCO
+    6  CCMM8LO  MAP      1.000       CCMM8LO  RAIM
+  CCMM8LO  MAT     6     1016.  0.6  0.6
+  CCMM8LO  SWE     6            CCMM8LO  SASC    6
+ 1.00 1.000.5000.1509999.    0
+0.1500.2000.000 1.000.0500.200
+  .28  .41  .55  .65  .73  .79  .84  .90  .94
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC2-LWR
+LO CCMM8 BLW 4000ft          6  CCMM8LO  RAIM       CCMM8LO  INFW
+  CCMM8LO  SASC    6  CCMM8LO   CCMM8LO  SUMS                FRZE
+                    1.0001.000 70.0 40.00.4000.0000.0000.040    0  .03
+                     100. 2.00 200. 60.0 100.0.1000.0060.200 .300  .00
+                    0.540.790.962.463.674.655.354.943.281.920.650.60 
+                       1.  0.0   1.  0.0   1.   1.    0
+  CCMM8LO  MAT     6                 CCMM8LO  SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+WEIGH-TS    WT1-SUMINFLO
+    2       CCMM8    INFW    6
+CCMM8UP   INFW       0.46
+CCMM8LO   INFW       0.54
+WEIGH-TS    WE2
+    2       CCMM8    RAIM    6
+CCMM8UP   RAIM       0.46
+CCMM8LO   RAIM       0.54
+WEIGH-TS    WE3
+    2       CCMM8    ROCL   24
+CCMM8UP   ROCL       0.46
+CCMM8LO   ROCL       0.54
+WEIGH-TS    WE4
+    2       CCMM8    SMZC   24
+CCMM8UP   SMZC       0.46
+CCMM8LO   SMZC       0.54
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-CCMM8
+CCMM8                          139.    6           ENGL     0.000
+  CCMM8    INFW    6  CCMM8LOC SQIN    6
+    1415.5    4251.6    4335.4    2840.3    1460.0     643.6
+MEAN-Q      MQ1-CCMM8LOC
+  CCMM8LOC SQIN    6  CCMM8LOC SQME   24
+#
+# The following operations compute the portion of the total Q from upper/lower areas
+#
+WEIGH-TS    WT2-UPPER
+    1       CCMM8UP  INFW    6
+CCMM8UP   INFW      0.46
+UNIT-HG     UH2-CCMM8
+CCMM8                          139.    6           ENGL     0.000
+  CCMM8UP  INFW    6  CCMM8UP  SQIN    6
+    1415.5    4251.6    4335.4    2840.3    1460.0     643.6
+MEAN-Q      MQ2-CCMM8UP
+  CCMM8UP  SQIN    6  CCMM8UP  SQME   24
+WEIGH-TS    WT3-LOWER
+    1       CCMM8LO  INFW    6
+CCMM8LO   INFW      0.54
+UNIT-HG     UH3-CCMM8
+CCMM8                          139.    6           ENGL     0.000
+  CCMM8LO  INFW    6  CCMM8LO  SQIN    6
+    1415.5    4251.6    4335.4    2840.3    1460.0     643.6
+MEAN-Q      MQ3-CCMM8LO
+  CCMM8LO  SQIN    6  CCMM8LO  SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Total flow equals local flow
+#
+WEIGH-TS    WT10-SAVESIMULATEDTOTALNODIVERSION
+    1       CCMM8TOT SQIN    6
+CCMM8LOC  SQIN       1.00
+#
+# Account for consumptive use
+#
+CHANLOSS    SFBM8
+ASSUMED LOSS         VARC
+CCMM8TOT   SQIN    6
+     0.0       0.0       0.0       0.0       0.0       0.0
+     0.0      0.15      0.15       0.0       0.0       0.0
+MEAN-Q      MQ4-CCMM8TOT
+  CCMM8TOT SQIN    6  CCMM8TOT SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  CCMM8DIV SQIN    6
+WEIGH-TS    WT10-ACTUALDIVERSION
+    2       CCMM8DIV SQIN    6
+CCMM8LOC  SQIN       1.00
+CCMM8TOT  SQIN      -1.00
+MEAN-Q      MQ5-ESTIMATEDDIVERSION
+  CCMM8DIV SQIN    6  CCMM8DIV SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-CCMM8
+CCMM8                   0    1    0
+CCMM8      QME    24
+CCMM8TOT   SQIN    6
+CCMM8TOT   QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       CCMM8NAT QME    24
+CCMM8     QME        1.00
+CCMM8DIV  SQME       1.00
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY1-LOCALNATURAL
+CCMM8                   2 SLOG      174.   10  YES
+  CCMM8NAT QME         OBSERVEDNAT     n
+  CCMM8LOC SQME        SIMULATEDLOC    s
+  CCMM8LO  RAIM    6            CCMM8LO             CCMM8LO  SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             174.    CCMM8LOC SQME   24  CCMM8NAT QME    24
+WY-PLOT     WY2-COMPONENTS
+CCMM8                   4 SLOG      174.   10  YES
+  CCMM8NAT QME         OBSERVEDNAT     n
+  CCMM8LOC SQME        SIMULATEDLOC    s
+  CCMM8UP  SQME        UPPER_PORTION   u
+  CCMM8LO  SQME        LOWER_PORTION   l
+  CCMM8UP  RAIM    6            CCMM8UP             CCMM8UP  SMZC
+WY-PLOT     WY3-TOTAL
+CCMM8                   2 SLOG      174.   10  YES
+  CCMM8    QME         OBSERVEDTOT     n
+  CCMM8TOT SQME        SIMULATEDTOT    s
+  CCMM8LO  RAIM    6            CCMM8LO             CCMM8LO  SMZC
+STAT-QME    TOTAL        
+TOTAL FLOWS             174.    CCMM8TOT SQME   24  CCMM8    QME    24
+PEAKFLOW   CCMM8
+instantaneous         06142400  CCMM8TOT SQIN
+    6    2    0    0    CCMM8.OBS.PEAK
+STOP

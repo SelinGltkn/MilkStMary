@@ -1,0 +1,106 @@
+3061   Cypress Lake Local Area
+   10 1950    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+# MAT and MAP data computed using incorrect basin boundaries!
+3061       MAP     6            INPUT
+MAP/3061.MAP06
+3061       MAT     6            INPUT
+MAT/3061.MAT
+3061       SASC    6
+3061       SWE     6
+3061       RAIM    6
+3061       INFW    6
+3061       ROCL   24
+3061       SMZC   24
+# ----- Observed Streamflow Observations ------------
+# Currently none, use reservoir inflows into
+# Cypress Lake when ready.
+# Observations are currently pointing to data at
+# 3017, just to run the deck (ignore STAT-QME!)
+3061       QME    24            INPUT
+TotQME/3017.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# none
+# ----- Un-Gaged Diversions -------------------------
+# none
+# ----- Sum of Routed Flows -------------------------
+# Headwater
+# ----- Computed Local Natural Flows ----------------
+3061NAT    QME    24            OUTPUT
+NatQME/3061.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+3061LOC    SQIN    6
+3061LOC    SQME   24
+# ----- Simulated Total Observed Flows --------------
+3061TOT    SQIN    6
+3061TOT    SQME   24
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+# 
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modelling
+#
+SNOW-17     SN1-UPR
+3061                1084.  45.            YES SUMS           RDCO
+    6  3061     MAP      1.000       3061     RAIM
+  3061     MAT     6     1084.  0.6  0.6
+  3061     SWE     6            3061     SASC    6
+ 1.20 1.100.3000.1509999.    0
+0.1500.2000.000 1.000.0500.100
+  .09  .22  .38  .49  .54  .57  .61  .66  .76
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+3061                         6  3061     RAIM       3061     INFW
+  3061     SASC    6  3061      3061     SUMS                FRZE
+                    1.0001.000 21.0 20.00.3000.0000.0000.010    0  .00
+                     80.0 1.95 95.0 45.0 70.00.1200.0050.300 .300  .00
+                    0.390.601.062.183.484.264.974.412.831.620.730.45
+                      5.0  0.0  20.  0.0  10.  25.    0
+  3061     MAT     6                 3061     SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3061
+3061                            48.    2           ENGL     0.000
+  3061     INFW    6  3061LOC  SQIN    6
+    3622.0    1571.0                                 
+MEAN-Q      MQ1-3061LOC
+  3061LOC  SQIN    6  3061LOC  SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Total flow equals local
+WEIGH-TS    WT1-SAVESIMULATEDTOTALNODIVERSION
+    1       3061TOT  SQIN    6
+3061LOC   SQIN      1.00
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT3-LOCALNATURAL
+    1       3061NAT  QME    24
+3061      QME       1.00
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY1-LOCALNATURAL
+3061                    2 SLOG      302.   25  YES
+  3061NAT  QME        OBSERVEDNAT     n
+  3061LOC  SQME       SIMULATEDLOC    s
+  3061     RAIM    6            3061                3061     SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             302.    3061LOC  SQME   24  3061NAT  QME    24
+STOP

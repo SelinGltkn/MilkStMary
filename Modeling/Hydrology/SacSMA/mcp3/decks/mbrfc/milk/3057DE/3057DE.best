@@ -1,0 +1,358 @@
+3057DE  Augmentation for the Vandalia Canal Demand
+   10 1980    9 2003
+#    5 1994    9 2003  Observed Diversion and inflows
+#   10 1980    9 2003   Simulation to make data available downstream
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+NSHM8      MAP     6            INPUT
+MAP/3047.MAP06
+NSHM8      MAT     6            INPUT
+MAT/3047.MAT
+# ----- Reservoir Data -----------------------------
+NEL        PELV   24            INPUT         CARD
+PELV/NEL.PELV24
+NEL        PELV    6
+NELEMTY    PELV    6
+NELFULL    PELV    6
+# Pool elevation trigger
+POOL       DFAC    6
+# ----- Regulation Modelling ------------------------
+# For the irrigation of 80.3 sqkm through gaged canals
+# Average MAT
+MAT        INFW    6
+AVGMAT     SQIN    6
+AVGMAT     MAT     6
+# Consumptive use model
+UNLIMITD   SQME   24            INTERNAL
+REMAIN     SQME   24
+RFIN       SQME   24
+RFOUT      SQME   24
+RFOUT      SQIN    6
+OTHLOSS    SQME   24
+CROPDMD    SQME   24            
+CROPET     MAPE   24
+# Consumptive use model estimate of diversion
+CUDIV      SQME   24            INTERNAL
+CUDIV      SQIN    6            INTERNAL
+# Precip sum
+SUMMAP     SQIN    6
+PERCENT    DFAC    6
+# Diversion reduced in high precip periods
+PCPNDIV    SQIN    6            INTERNAL
+PCPNDIV    SQME   24            INTERNAL
+# Julian date
+JULDATE    SQIN    6            INTERNAL
+CUTOFF     DFAC    6            INTERNAL
+# Diversion with clipped start/end 
+CLIPDDIV   SQME   24            INTERNAL
+# Final diversion demand
+3057DMND   SQIN    6            OUTPUT
+DEMAND/3057.DEMAND.SQIN                                                (6F10.2)
+3057DMND   SQME   24            INTERNAL
+# Available flows at Vandalia without Nelson North
+# These ignore local diversion between Nelson and Vandalia
+AVAIL      SQIN    6
+MINFLOW    SQIN    6
+AVAILVAN   SQIN    6
+# Demanded augmentation through Nelson North
+NELSNAUG   SQIN    6            OUTPUT
+DEMAND/NELSN.DEMAND.SQIN                                               (6F10.2)
+NELSNAUG   SQME   24
+NELSONN    QINE    6            OUTPUT
+DEMAND/NELSN.DEMAND.QINE                                               (6F10.2)
+# ----- Gaged Diversions ----------------------------
+VANDDIV    DQME   24            INPUT
+DQME/3057.OBS.DQME
+VANDDIV    SQME   24
+VANDDIV    SQIN    6
+NELSONN    DQME   24            INPUT
+DQME/SACM8.OBS.DQME
+NELSONN    DQIN    6
+NELSONS    DQME   24            INPUT
+DQME/NelsonSouth.DQME
+NELSONS    DQIN    6
+# ----- Observed Streamflow Observations ------------
+CRCM8      SQIN    6            INPUT
+TotQINE/CRCM8.TOT.SQIN
+OBSVAND    SQIN    6
+# ----- Simulated Augmentations to main stem --------
+AUGSACM8   SQIN    6            INPUT
+AUGMENT/SACM8.AUG.SQIN
+SACM8      SQIN    6
+AUG3033    SQIN    6            INPUT
+TotQINE/3033.TOT.SQIN
+AUGHNDM8   SQIN    6            INPUT
+AUGMENT/HNDM8.AUG.SQIN
+HNDM8      SQIN    6
+AUG3057    SQIN    6            INPUT
+AUGMENT/3057.AUG.SQIN
+END
+#
+# ----------- Unlimited Supply Portion of Diversion Modeling -----------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Create an unlimited supply 
+#
+SET-TS      UNLIMITD
+  UNLIMITD SQME   24   99999999.0
+#
+## Take 7-day average MAT for input into CONS_USE model instead of 6-hour 
+## MAT. 
+#
+LOOKUP      AVG_MAT1
+    2    0
+NSHM8     MAT      6
+MAT       INFW     6
+      -500.0      -500.0       500.0       500.0 
+UNIT-HG     AVG_MAT2
+AVERAGE MAT OVER 7 DAYS       0.0093  28           ENGL     0.000
+  MAT      INFW    6  AVGMAT   SQIN    6
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+LOOKUP      AVG_MAT3
+    2    0
+AVGMAT    SQIN     6
+AVGMAT    MAT      6
+      -500.0      -500.0       500.0       500.0 
+#
+## Consumptive Use Model (return flows turned off)
+## for the irrigation of 80 sqkm through gaged canals
+#
+CONS_USE    VAND 
+VAND  CONSUMPTIVE USE
+0
+AVGMAT MAT  UNLIMITD SQME
+REMAIN SQME CUDIV SQME
+RFIN SQME RFOUT SQME OTHLOSS SQME CROPDMD SQME CROPET MAPE
+ 48.0  80.  0.40 0.0
+0.00 0.00 0.00 0.30 0.40 0.45
+0.50 0.50 0.50 0.00 0.00 0.00
+    0.00     0.00     0.00
+CHANGE-T    CT2-CUDIV
+  CUDIV    SQME   24  CUDIV    SQIN    6
+#
+## Compute moving sum of RAIM 
+#
+UNIT-HG     SUMMAP
+SUM RAIM OVER 14 DAYS         0.5208  56           ENGL     0.000
+  NSHM8    MAP     6  SUMMAP   SQIN    6
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+#
+## Create a scaling time series, representing a fraction of the originally
+## computed diversion that will be diverted. If it rains more than X.X inches 
+## over 2 weeks, a reduction in the diversion begins, up to a maximum reduction 
+## of XX% when it has rained X.X inches or more.
+#
+LOOKUP      MAPPRCNT 
+    8    0
+SUMMAP    SQIN     6
+PERCENT   DFAC     6
+         0.0         1.0         0.5         1.0         0.7         0.8
+         1.8         0.5         2.0         0.3         2.1         0.1      
+         2.6         0.0      1000.0         0.0
+#
+## Multiply the scaling factor times the diversion to reduce the diversion
+## in wet periods
+#
+MULT/DIV    MD1-APPLY DIVERSION REDUCTION
+  CUDIV    SQIN    6  PERCENT  DFAC    6
+  PCPNDIV  SQIN   1
+MEAN-Q      MQ1-DIVERSION AFTER REDUCTION
+  PCPNDIV  SQIN    6  PCPNDIV  SQME   24
+#
+## Use CHANLOSS, LOOKUP, and MULT/DIV to set the start and end dates for 
+## the demand to 5/15 and 10/1.
+#
+SET-TS      JULIAN  
+  JULDATE  SQIN    6          0.0
+CHANLOSS    JULIAN 
+CREATE JULIAN DATE   VARC
+JULDATE    SQIN    6
+      -15.      -46.      -74.     -105.     -135.     -166.
+     -196.     -227.     -258.     -288.     -319.     -349.
+LOOKUP      DATECUTOFF (May 15 to Oct 1)
+    4   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+       121.         0.0        135.         1.0        258.         1.0
+       274.         0.0      
+MULT/DIV    MD2-DATECUTOFF
+  PCPNDIV  SQIN    6  CUTOFF   DFAC    6
+  3057DMND SQIN   1
+MEAN-Q      MQ2-DIVERSION AFTER SHARP START AND FINISH
+  3057DMND SQIN    6  3057DMND SQME   24
+#
+## Compute the total available flow at Vandalia Without Nelson North Releases
+#
+SET-TS      AVAIL 
+  AVAIL    SQIN    6          0.0
+#
+## Route the CRCM8 flow
+# 
+LAG/K       LK1-CRCM8RTD
+CRCM8    SQIN  6                      2     2 ENGL 0.00       0.0
+       12   0   6    700
+        6   0   3    700
+           0
+WEIGH-TS    WT1-SACM8
+    2       SACM8    SQIN    6
+CRCM8     SQIN       1.00
+AUGSACM8  SQIN       1.00
+#
+## Route the SACM8 flow
+#
+LAG/K       LK1-SACM8RTD
+SACM8    SQIN  6                      2     2 ENGL 0.00       0.0
+      12   0   3   700
+       6   0   1   700
+           0
+#
+## Route the 3033 flow
+#
+LAG/K       LK2-3033
+AUG3033  SQIN  6                      2     2 ENGL 0.00       0.0
+       3   0   1   700
+       2   0   1   700
+           0
+WEIGH-TS    WT2-HNDM8
+    3       HNDM8    SQIN    6
+SACM8     SQIN       1.00
+AUG3033   SQIN       1.00
+AUGHNDM8  SQIN       1.00
+#
+## Route the HNDM8 flow
+#
+LAG/K       LK1-HNDM8
+HNDM8    SQIN  6                      2     2 ENGL 0.00       0.0
+       3   0   2   700
+       2   0   1   700
+           0
+WEIGH-TS    WT3-AVAIL
+    2       AVAIL    SQIN    6
+HNDM8     SQIN       1.00
+AUG3057   SQIN       1.00
+#
+## Rough computation of 'observed' flows at Vandalia 
+## (without Nelson Releases and Vandalia Diversion)
+#
+#NOMSNG     VANDDIV
+#  VANDDIV  QIN     6  VANDDIV  SQIN    0 1.0     0
+#CHANGE-T    CT3-VANDDIV
+#  VANDDIV  SQME   24  VANDDIV  SQIN    6
+# Must change NELSONN from DQME to SQME To run WEIGH-TS below!
+CHANGE-T    CT4-NELSONN
+  NELSONN  DQME   24  NELSONN  DQIN    6
+#WEIGH-TS    WT2-OBSVAND
+#    3       OBSVAND  SQIN    6
+#TMPM8     SQIN       1.00
+#VANDDIV   SQIN       1.00
+#NELSONN   SQIN      -1.00
+#
+## Compute the flows available for the Vandalia Diversion
+#
+SET-TS      MINFLOW 
+  MINFLOW  SQIN    6          0.0
+CHANLOSS    MINFLOW
+MINIMUM FLOW         VARC                           0.0
+MINFLOW    SQIN    6
+     -4.00     -4.00     -4.00     -4.00     -4.00     -2.00
+     -2.00     -1.50     -1.50     -1.50     -1.00     -1.00
+#
+## Need to use the following if using 'observed' Vandalia flows
+## to compute available flows
+#
+#ADD/SUB     AVAILVAN
+#  AVAILVAN SQIN    6  OBSVAND  SQIN    6
+#
+## Use the following with simulated available flows 
+#
+ADD/SUB     AVAILVAN
+  AVAILVAN SQIN    6  AVAIL    SQIN    6
+ADD/SUB     MINFLOW
+  AVAILVAN SQIN    6  MINFLOW  SQIN    6  SUB
+#
+## Compute the augmentation required by the Nelson North Canal
+#
+ADD/SUB     1NELSNAUG
+  NELSNAUG SQIN    6  3057DMND SQIN    6
+ADD/SUB     2NELSNAUG
+  NELSNAUG SQIN    6  AVAILVAN SQIN    6  SUB
+#
+## Restrict the releases by date
+#
+LOOKUP      VANDCUTOFF
+    7   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+         1.         0.0        139.         0.0        140.         1.0
+       162.         1.0        244.         1.0        245.         0.0
+       366.         0.0      
+MULT/DIV    MD3-VANDCUTOFF
+  NELSNAUG SQIN    6  CUTOFF   DFAC    6
+  NELSNAUG SQIN   1
+MEAN-Q      2NELSNAUG
+  NELSNAUG SQIN    6  NELSNAUG SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-NELSNAUG
+NELSN                   0    1    0
+NELSONN    DQME   24
+NELSNAUG   SQIN    6
+NELSONN    QINE    6
+   10     0.025 
+#
+#
+# --------------- Total Plotting and Analysis --------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## The following is just to relate the Vandialia Demand to the Nelson North Releases
+#
+CHANGE-T    CT5-NELSONS
+  NELSONS  DQME   24  NELSONS  DQIN    6
+CHANGE-T    PELV 
+  NEL      PELV   24  NEL      PELV    6
+SET-TS      NELEMTY
+  NELEMTY  PELV    6       672.00
+SET-TS      NELFULL
+  NELFULL  PELV    6       676.00
+#
+## Total Flow and Diversion Plots
+#
+PLOT-TS     TOT&DIV
+TOTAL AND DIVERSION          3    4   14
+ ARIT              0        15    4              #--Supply-unlimited diversion
+  VANDDIV  DQME   24        VAND DIV        o       #    Observed VANDALIA diversion
+  3057DMND SQME   24        SHARP DEMAND    s       #    Diversion computed with sharp start/end
+  PCPNDIV  SQME   24        UNLIMD SUPPLY   d       #    Diversion computed without supply limits       
+  CUDIV    SQME   24        CU DIVERSION    c       #    Diversion computed by the consumptive use model
+ ARIT              0       0.2    1              #--Precipitation sum  
+  SUMMAP   SQIN    6        MAP SUM         m       #    14-day sum of precipitation
+ ARIT              0        50    6              #--Supply-unlimited diversion
+  NELSONN  DQIN    6        NELSONN         n       #    Observed Nelson North Releases
+  AVAILVAN SQIN    6        AVAIL VAND      v       #    Available flows at Vandalia icnl. minimum flows
+  AVAIL    SQIN    6        AVAILABLE       t       #    Available flows at Vandalia
+  3057DMND SQIN    6        DEMAND          d       #    Diversion demand
+  NELSNAUG SQIN    6        AUGMENTATION    a       #    Simulated augmentation needed
+  NELSONS  DQIN    6        NELSONS         s       #    Observed Nelson South Releases
+ ARIT            650       700    3              #--Nelson Pool Elevations
+  NEL      PELV    6        NELSON          p       #    Observed Nelson Pool Elevation
+  NELEMTY  PELV    6        EMPTY           e       #    Nelson Pool Elevation close to empty
+  NELFULL  PELV    6        FULL            f       #    Nelson Pool Elevation close to full
+#
+## Diversion statistics
+#
+STAT-QME    ST3-DIVERSION
+DIVS-NO SUPPLY LIMIT      999.  3057DMND SQME   24  VANDDIV  DQME   24
+STAT-QME    ST4-AUGMENTATION
+AUGMENTATION              999.  NELSNAUG SQME   24  NELSONN  DQME   24
+STOP

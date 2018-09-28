@@ -1,0 +1,228 @@
+DDAM8  Milk River Nr Dodson, MT
+   10 1980   9 2004
+#    7 1994  10 2003  Full diversion data
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+DDAM8      MAP     6            INPUT
+MAP/3015.MAP06
+DDAM8      MAT     6            INPUT
+MAT/3015.MAT
+DDAM8      SASC    6
+DDAM8      SWE     6
+DDAM8      RAIM    6
+DDAM8      ROCL   24
+DDAM8      SMZC   24
+DDAM8      INFW    6
+# ----- Observed Streamflow Observations ------------
+DDAM8      QME    24            INPUT
+TotQME/DDAM8.OBS.QME
+DDAM8      QIN     6
+HRLM8      SQIN    6            INPUT
+TotQINE/HRLM8.TOT.QINE
+HRLM8RTD   SQIN    6
+KHRM8      SQIN    6            INPUT
+TotQINE/KHRM8.TOT.QINE
+KHRM8RTD   SQIN    6
+# ----- Gaged Diversions ----------------------------
+#DDAM8ODV   SQME   24            INPUT
+#DQME/DDAM8.OBS.DQME.FILLED
+#DDAM8ODV   SQIN    6
+# ----- Un-Gaged Diversions -------------------------
+DDAM8DIV   SQIN    6
+DDAM8DIV   SQME   24
+ROUTEDOD   SQIN    6
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            
+ROUTED     SQME   24            
+# ----- Computed Local Natural Flows ----------------
+DDAM8NAT   QIN     6
+DDAM8NAT   QME    24            OUTPUT
+NatQME/DDAM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+DDAM8LOC   SQIN    6
+DDAM8LOC   SQME   24            OUTPUT
+NatSQME/DDAM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+DDAM8TOT   SQIN    6
+DDAM8TOT   SQME   24            OUTPUT
+TotSQME/DDAM8.TOT.SQME
+DDAM8TOT   QINE    6            OUTPUT
+TotQINE/DDAM8.TOT.QINE
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    DDAM8
+  DDAM8    QME    24  DDAM8    QIN     6
+#
+## Route the upstream HRLM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK1-HRLM8
+HRLM8    SQIN  6 HRLM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+       30   0   18   700
+       24   0   12   700
+           0
+#
+## Route the upstream KHRM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK2-KHRM8
+KHRM8    SQIN  6 KHRM8RTD SQIN  6     0     0 ENGL 0.00       0.0
+       24
+       24
+           0
+#
+## Compute routed flow
+## Include Dodson North.South Canal diversion at DDAM8
+#CHANGE-T    DDAM8GAD
+#  DDAM8ODV SQME   24  DDAM8ODV SQIN    6
+WEIGH-TS    WT1-ROUTED
+    2       ROUTED   SQIN    6
+HRLM8RTD  SQIN       1.00
+KHRM8RTD  SQIN       1.00
+#DAM8ODV  SQIN      -1.00
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-DDAM8     
+DDAM8                826.  41.            YES SUMS           RDCO
+    6  DDAM8    MAP      1.000       DDAM8    RAIM
+  DDAM8    MAT     6      826.  0.6  0.6
+  DDAM8    SWE     6            DDAM8    SASC    6
+ 1.00 1.100.3000.1009999.    0
+0.1500.2000.000 1.000.0500.100
+  .10  .16  .25  .33  .41  .48  .55  .64  .74
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-DDAM8   
+DDAM8                        6  DDAM8    RAIM       DDAM8    INFW
+  DDAM8    SASC    6  DDAM8     DDAM8    SUMS                FRZE
+                    1.0001.000 30.0 50.00.4000.0000.0000.030    0  .00
+                     75.0 2.50 180. 45.0 80.00.1000.0050.300 .300  .00
+                    0.480.761.382.724.054.965.695.163.462.020.940.56
+                      0.2  0.2   0.  0.0   0.   0.    0
+  DDAM8    MAT     6                 DDAM8    SWE     6
+0.1000.0800.050 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-DDAM8
+DDAM8                          741.   11           ENGL     0.000
+  DDAM8    INFW    6  DDAM8LOC SQIN    6
+    1131.4    6295.2   11891.2   14431.9   13745.4   11230.8    8255.0
+    5615.6    3600.6    2203.5    1298.5			
+MEAN-Q      MQ4-DDAM8LOC
+  DDAM8LOC SQIN    6  DDAM8LOC SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Save the routed time series
+#
+WEIGH-TS    WT10-SAVESIMULATEDROUTEDNODIVERSION
+    1       ROUTEDOD SQIN    6
+ROUTED    SQIN       1.00
+#
+## Account for Dodson Diversions (monthly averages)
+## (from routed flows)
+#
+CHANLOSS    Dodson-DDAM8
+ASSUMED LOSS         VARC
+ROUTED     SQIN    6
+     0.0       0.0       0.0       2.8      10.0      10.0
+    10.0      13.0      11.0       2.8       0.4       0.0
+#
+## Account for additional consumptive use
+## (from routed flows)
+#
+CHANLOSS    CU-DDAM8
+ASSUMED LOSS         VARC
+ROUTED     SQIN    6
+     0.0       0.0       1.0       4.0       4.5       2.0
+     1.0       0.5       0.5      -0.5       0.0       0.0
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  DDAM8DIV SQIN    6
+WEIGH-TS    WT10-ACTUALDIVERSION
+    2       DDAM8DIV SQIN    6
+ROUTEDOD  SQIN       1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-ESTIMATEDDIVERSION
+  DDAM8DIV SQIN    6  DDAM8DIV SQME   24
+#
+# Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       DDAM8TOT SQIN    6
+DDAM8LOC  SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ5-DDAM8TOT
+  DDAM8TOT SQIN    6  DDAM8TOT SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-DDAM8
+DDAM8                   0    1    0
+DDAM8      QME    24
+DDAM8TOT   SQIN    6
+DDAM8TOT   QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       DDAM8NAT QIN     6
+DDAM8     QIN        1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  DDAM8NAT QIN     6  DDAM8NAT QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT1-DDAM8
+COMPARE LAG TO INST          3    1    4
+ ARIT   40         0       200    4
+  DDAM8    QIN     6        DOWNSTR         d
+  DDAM8TOT SQIN    6        DDAM8TOT        T
+  ROUTED   SQIN    6        ROUTED          r
+  ROUTEDOD SQIN    6        RTDNODIV        t
+STAT-QME    LAG
+LAG ANALYSIS-DDAM8      9999.9  ROUTED   SQME   24  DDAM8    QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+DDAM8                   2 SLOG      742.  100  YES
+  DDAM8NAT QME         OBSRVD_NAT      o
+  DDAM8LOC SQME        DDAM8_LOC       l
+  DDAM8    RAIM    6            DDAM8               DDAM8    SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS             742.    DDAM8LOC SQME   24  DDAM8NAT QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+DDAM8                   4 SLOG    28730.   50  YES
+  DDAM8    QME         OBSRVD_TOT      o
+  DDAM8TOT SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  DDAM8LOC SQME        DDAM8_LOC       l
+  DDAM8    RAIM    6            DDAM8               DDAM8    SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS           28730.    DDAM8TOT SQME   24  DDAM8    QME    24
+STOP

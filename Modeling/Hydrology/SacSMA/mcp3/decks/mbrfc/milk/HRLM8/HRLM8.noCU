@@ -1,0 +1,308 @@
+HRLM8  Milk River Nr Harlem, MT
+   10 1988   9 2004
+ #  10 1988  10 2003    For Evaluation
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+HRLM8      MAP     6            INPUT
+MAP/3025.MAP06
+HRLM8      MAT     6            INPUT
+MAT/3025.MAT
+HRLM8      SASC    6
+HRLM8      SWE     6
+HRLM8      RAIM    6
+HRLM8      ROCL   24
+HRLM8      SMZC   24
+HRLM8      INFW    6
+# ----- Observed Streamflow Observations ------------
+HRLM8      QME    24            INPUT
+TotQME/HRLM8.OBS.QME
+HRLM8      QIN     6
+HVRM8      SQIN    6            INPUT
+TotQINE/HVRM8.TOT.QINE
+HVRM8RTD   SQIN    6
+CCMM8      SQIN    6            INPUT
+TotQINE/CCMM8.TOT.QINE
+CCMM8RTD   SQIN    6
+LGEM8      SQIN    6            INPUT
+TotQINE/LGEM8.TOT.QINE
+LGEM8RTD   SQIN    6
+BCMM8      SQIN    6            INPUT
+TotQINE/BCMM8.TOT.QINE
+BCMM8RTD   SQIN    6
+# ----- Gaged Diversions ----------------------------
+HRLM8UPD   SQME   24            INPUT
+DQME/HRLM8.OBS-UP.DQMEnew
+HRLM8UPD   SQIN    6
+HRLM8UDR   SQIN    6
+HRLM8LOD   SQME   24            INPUT
+DQME/HRLM8.OBS-LO.DQME
+HRLM8LOD   SQIN    6
+HRLM8LDR   SQIN    6
+HRLM8GAD   SQME   24            INPUT
+DQME/HRLM8.OBS-GAGE.DQME
+HRLM8GAD   SQIN    6
+# ----- Un-Gaged Diversions -------------------------
+HRLM8DIV   SQIN    6
+HRLM8DIV   SQME   24
+ROUTEDOD   SQIN    6
+# ----- Sum of Routed Flows -------------------------
+UPPERRTD   SQIN    6
+LOWERRTD   SQIN    6
+ROUTED     SQIN    6            
+ROUTED     SQME   24            
+# ----- Computed Local Natural Flows ----------------
+HRLM8NAT   QIN     6
+HRLM8NAT   QME    24            OUTPUT
+NatQME/HRLM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+HRLM8LOC   SQIN    6
+HRLM8LOC   SQME   24            OUTPUT
+NatSQME/HRLM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+HRLM8TOT   SQIN    6
+HRLM8TOT   SQME   24            OUTPUT
+TotSQME/HRLM8.TOT.SQME
+HRLM8TOT   QINE    6            OUTPUT
+TotQINE/HRLM8.TOT.QINE
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    HRLM8
+  HRLM8    QME    24  HRLM8    QIN     6
+#
+## Route the upstream HVRM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK1-HVRM8
+HVRM8    SQIN  6 HVRM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+       48   0   36   700
+       24   0   18   1400
+           0
+#
+## Route the upstream CCMM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK3-CCMM8
+CCMM8    SQIN  6 CCMM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+       32   0   24   700
+       16   0   12   700
+           0
+#
+## Route the Fort Belknap and Zurich Diversions (missing were
+## filled with zeros)
+#
+CHANGE-T    HRLM8UPD
+  HRLM8UPD SQME   24  HRLM8UPD SQIN    6
+LAG/K       LK4-HRLM8UPD
+HRLM8UPD SQIN  6 HRLM8UDR SQIN  6     2     2 ENGL 0.00       0.0
+       32   0   24   700
+       16   0   12   700
+           0
+#
+## Route the upstream LGEM8 flow (simulated adjusted to observed)
+#
+## Remove average N. Chinook Canal Diversion first
+#
+CHANLOSS    LGEM8
+ASSUMED LOSS         VARC
+LGEM8      SQIN    6
+     0.0       0.0       0.0       0.0       0.0       0.0
+     0.0       0.0       0.0       0.0       0.0       0.0           
+#     0.0       0.0      0.32      0.89      0.37      0.16
+#    0.15      0.01      0.03       0.0       0.0       0.0
+LAG/K       LK2-LGEM8
+LGEM8    SQIN  6 LGEM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+       60   0   48   700
+       36   0   24   700
+           0
+#
+## Route the Paradise Valley and Harlem Diversions (missing were
+## filled with zeros)
+#
+CHANGE-T    HRLM8LOD
+  HRLM8LOD SQME   24  HRLM8LOD SQIN    6
+LAG/K       HRLM8LOD
+HRLM8LOD SQIN  6 HRLM8LDR SQIN  6     2     2 ENGL 0.00       0.0
+       16   0   12   700
+        8   0    6   700
+           0
+#
+## Route the upstream BCMM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK3-BCMM8
+BCMM8    SQIN  6 BCMM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+       16   0   12   700
+        8   0    6   700
+           0
+#
+## Compute routed flow
+## Include diversion to BIA MAin Canal at the HRLM8
+CHANGE-T    HRLM8GAD
+  HRLM8GAD SQME   24  HRLM8GAD SQIN    6
+WEIGH-TS    WT1-ROUTED
+    6       ROUTED   SQIN    6
+HVRM8RTD  SQIN       1.00
+CCMM8RTD  SQIN       1.00
+HRLM8UDR  SQIN      -1.00
+LGEM8RTD  SQIN       1.00
+HRLM8LDR  SQIN      -1.00
+BCMM8RTD  SQIN       1.00
+#HRLM8GAD  SQIN      -1.00
+CHANLOSS    FCBM
+ASSUMED LOSS         VARP
+ROUTED     SQIN    6
+     0.0       0.0       0.0      0.00      0.30      0.40
+    0.50      0.20       0.0       0.0       0.0       0.0           
+#
+## --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-HRLM8     
+HRLM8                869.  41.            YES SUMS           RDCO
+    6  HRLM8    MAP      1.000       HRLM8    RAIM
+  HRLM8    MAT     6      869.  0.0  0.0
+  HRLM8    SWE     6            HRLM8    SASC    6
+ 1.00 1.100.3000.1509999.    0
+0.1500.2000.000 1.000.0500.200
+  .10  .16  .25  .33  .41  .48  .55  .64  .74
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-HRLM8   
+HRLM8                        6  HRLM8    RAIM       HRLM8    INFW
+  HRLM8    SASC    6  HRLM8     HRLM8    SUMS                FRZE
+                    1.0001.000 30.0 25.00.4000.0050.0000.015    0  .00
+                     50.0 2.50 100. 60.0100.00.1000.0060.400 .300  .00
+                    0.480.751.382.663.974.895.655.093.401.990.930.55
+                      0.0  0.0   0.  0.0   0.   0.    0
+  HRLM8    MAT     6                 HRLM8    SWE     6
+0.1000.0800.050 0.00 -3.00.200 10.0   0.   0.   0.
+  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-HRLM8
+HRLM8                         1529.   15           ENGL     0.000
+  HRLM8    INFW    6  HRLM8LOC SQIN    6
+     642.4    4571.7   11042.8   17139.1   20906.5   21813.6   20503.9
+   17837.6   14626.5   11448.6    8626.6    6301.9    4484.6    2989.0
+    1473.8
+MEAN-Q      MQ4-HRLM8LOC
+  HRLM8LOC SQIN    6  HRLM8LOC SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Save the routed time series
+#
+WEIGH-TS    WT10-SAVESIMULATEDROUTEDNODIVERSION
+    1       ROUTEDOD SQIN    6
+ROUTED    SQIN       1.00
+#
+## Account for consumptive use
+## (from routed flows)
+#
+CHANLOSS    HRLM8
+ASSUMED LOSS         VARC
+ROUTED     SQIN    6
+     0.0       0.0      0.32      0.89      0.37      0.16
+    0.15      0.01      0.03       0.0       0.0       0.0
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#     0.0       0.0       0.0       0.0       0.0       0.0
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  HRLM8DIV SQIN    6
+WEIGH-TS    WT10-ACTUALDIVERSION
+    2       HRLM8DIV SQIN    6
+ROUTEDOD  SQIN       1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-ESTIMATEDDIVERSION
+  HRLM8DIV SQIN    6  HRLM8DIV SQME   24
+#
+# Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       HRLM8TOT SQIN    6
+HRLM8LOC  SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ5-HRLM8TOT
+  HRLM8TOT SQIN    6  HRLM8TOT SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-HRLM8
+HRLM8                   0    1    0
+HRLM8      QME    24
+HRLM8TOT   SQIN    6
+HRLM8TOT   QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       HRLM8NAT QIN     6
+HRLM8     QIN        1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  HRLM8NAT QIN     6  HRLM8NAT QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT1-HRLM8
+COMPARE LAG TO INST          3    1   10
+ ARIT   60         0       200   10
+  HRLM8    QIN     6        DOWNSTR         d
+  HVRM8RTD SQIN    6        HVRM8RTD        1
+  CCMM8RTD SQIN    6        CCMM8RTD        2
+  HRLM8UDR SQIN    6        HVRM8UDR        u
+  LGEM8RTD SQIN    6        LGEM8RTD        3
+  HRLM8LDR SQIN    6        HVRM8LDR        l
+  BCMM8RTD SQIN    6        BCMM8RTD        4
+  HRLM8GAD SQIN    6        HRLM8GAD        g
+  ROUTED   SQIN    6        ROUTED          r
+  ROUTEDOD SQIN    6        RTDNODIV        t
+PLOT-TS     PLOT2-HRLM8
+COMPARE DIVERSIONS           3    1    5
+ ARIT   40         0       200    5
+  HRLM8    QIN     6        DOWNSTR         d
+  HRLM8UDR SQIN    6        HVRM8UDR        u
+  HRLM8LDR SQIN    6        HVRM8LDR        l
+  HRLM8GAD SQIN    6        HRLM8GAD        g
+  ROUTED   SQIN    6        ROUTED          r
+STAT-QME    LAG
+LAG ANALYSIS-HRLM8      9999.9  ROUTED   SQME   24  HRLM8    QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+HRLM8                   2 SLOG     3968.  100  YES
+  HRLM8NAT QME         OBSRVD_NAT      o
+  HRLM8LOC SQME        HRLM8_LOC       l
+  HRLM8    RAIM    6            HRLM8               HRLM8    SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS            3968.    HRLM8LOC SQME   24  HRLM8NAT QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+HRLM8                   4 SLOG    24969.   50  YES
+  HRLM8    QME         OBSRVD_TOT      o
+  HRLM8TOT SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  HRLM8LOC SQME        HRLM8_LOC       l
+  HRLM8    RAIM    6            HRLM8               HRLM8    SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS           24969.    HRLM8TOT SQME   24  HRLM8    QME    24
+STOP

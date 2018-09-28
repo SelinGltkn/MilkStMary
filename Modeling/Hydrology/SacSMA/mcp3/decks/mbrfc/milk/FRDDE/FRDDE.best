@@ -1,0 +1,189 @@
+FRDDE Frenchman Canal
+   10 1980   9 2004
+#   10 1980   9 2004 Simulation to make data available downstream
+#   10 1948    9 1967 Evaluation period
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+3057       MAP     6            INPUT
+MAP/3057.MAP06
+3057       MAT     6            INPUT
+MAT/3057.MAT
+# ----- Regulation Modelling ------------------------
+# For the irrigation of an unknown area through
+# Frenchman Canal
+# Average MAT
+MAT        INFW    6
+AVGMAT     SQIN    6
+AVGMAT     MAT     6
+# Consumptive use model
+UNLIMITD   SQME   24
+REMAIN     SQME   24
+RFIN       SQME   24
+RFOUT      SQME   24
+RFOUT      SQIN    6
+OTHLOSS    SQME   24
+CROPDMD    SQME   24            
+CROPET     MAPE   24
+# Consumptive use model estimate of diversion
+CUDIV      SQME   24            INTERNAL
+CUDIV      SQIN    6            INTERNAL
+# Precip sum
+SUMMAP     SQIN    6
+PERCENT    DFAC    6
+# Diversion reduced in high precip periods
+PCPNDIV    SQIN    6
+PCPNDIV    SQME   24                    
+# Julian date
+JULDATE    SQIN    6            INTERNAL
+CUTOFF     DFAC    6            INTERNAL
+# Diversion with clipped start/end 
+CLIPDDIV   SQME   24            INTERNAL
+# Final diversion
+FRDDEMND   SQIN    6            OUTPUT
+DEMAND/FRD.DEMAND.SQIN                                                 (6F10.2)            
+FRDDEMND   SQME   24           
+# ----- Gaged Diversions ----------------------------
+FRCNLOBS   DQME   24            INPUT
+DQME/3022.OBS.DQME
+# ----- Un-Gaged Diversions -------------------------
+# not applicable
+# ----- Sum of Routed Flows -------------------------       
+# not applicable
+# ----- Computed Local Natural Flows ----------------
+# not applicable
+# ----- Simulated Local Natural Flows ---------------
+# not applicable
+# ----- Simulated Total Observed Flows --------------
+END
+#
+# ----------- Unlimited Supply Portion of Diversion Modeling -----------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Create an unlimited supply 
+#
+SET-TS      FRCNLNFOW
+  UNLIMITD SQME   24   99999999.0
+#
+## Before CU model, take 14-day average MAT for input instead of 6-hour MAT.
+## (Use 3057 area MAT since this area seems to be most representative)
+#
+LOOKUP      LU1-CONVERT TO ALLOW COMPUTATION OF AVERAGE MAT
+    2    0
+3057      MAT      6
+MAT       INFW     6
+      -500.0      -500.0       500.0       500.0
+UNIT-HG     UH1-AVERAGE MAT OVER LAST 14 DAYS
+AVERAGE MAT OVER 14 DAYS      0.0093  56           ENGL     0.000
+  MAT      INFW    6  AVGMAT   SQIN    6
+    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179
+    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179
+    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179
+    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179
+    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179
+    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179
+    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179
+    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179    0.0179
+LOOKUP      LU2-RECONVERT AVERAGE MAT SQIN TO MAT
+    2    0
+AVGMAT    SQIN     6
+AVGMAT    MAT      6
+      -500.0      -500.0       500.0       500.0
+#
+## CU model
+## Irrigated area for Frenchman Canal, area estimated
+## Initial CU parameters set to Vandalia Canal
+#
+CONS_USE    CU1-FRCNL
+ Consumptive use fed by Frenchman Canal
+ 0
+ AVGMAT   MAT  UNLIMITD SQME
+ REMAIN   SQME CUDIV    SQME
+ RFIN     SQME RFOUT    SQME OTHLOSS  SQME CROPDMD  SQME CROPET   MAPE-
+ 48.0  16.  0.40 0.0
+0.00 0.00 0.00 0.00 0.50 0.50
+0.30 0.30 0.00 0.00 0.00 0.00
+    0.00     0.00     0.00
+CHANGE-T    CT1-CUDIV
+  CUDIV    SQME   24  CUDIV    SQIN    6
+#
+## Reduce diversion during wet periods (Use 3057  area precip as an
+## indicator since it has the highest percentage of the total irrigated area)
+#
+UNIT-HG     UH2-SUM MAP OVER LAST 14 DAYS (inches)
+SUM MAP OVER 14 DAYS          0.5207  56           ENGL     0.000
+  3057     MAP     6  SUMMAP   SQIN    6
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+#
+## Create a scaling time series, representing a fraction of the originally
+## computed diversion that will be diverted. If it rains more than 0.1 inches 
+## over 2 weeks, a reduction in the diversion begins, up to a maximum reduction 
+## of 80% when it has rained 4.0 inches or more.
+#
+LOOKUP      LU3-REDUCTION BASED ON PRECIPITATION
+    5    0
+SUMMAP    SQIN     6
+PERCENT   DFAC     6
+         0.0         1.0         0.5         1.0         2.0         0.2
+         5.0         0.1         6.0         0.1      1000.0         0.0
+#         0.0         1.0         0.5         1.0         3.0         0.1
+#         4.0         0.0      1000.0         0.0
+#
+## Multiply the scaling factor times the diversion to reduce the diversion
+## in wet periods
+#
+MULT/DIV    MD1-APPLY DIVERSION REDUCTION
+  CUDIV    SQIN    6  PERCENT  DFAC    6
+  PCPNDIV  SQIN   1
+MEAN-Q      MQ1-DIVERSION AFTER REDUCTION
+  PCPNDIV  SQIN    6  PCPNDIV  SQME   24
+#
+## Use CHANLOSS, LOOKUP, and MULT/DIV to set the start and end dates for 
+## the demand to 5/1 and 8/20.
+#
+SET-TS      JULIAN  
+  JULDATE  SQIN    6          0.0
+CHANLOSS    JULIAN 
+CREATE JULIAN DATE   VARC
+JULDATE    SQIN    6
+      -15.      -46.      -74.     -105.     -135.     -166.
+     -196.     -227.     -258.     -288.     -319.     -349.
+LOOKUP      DATECUT
+    4   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+        121.         0.0        122.         1.0        232.         1.0
+        233.         0.0        
+MULT/DIV    MD2-DATE CUTOFF
+  PCPNDIV  SQIN    6  CUTOFF   DFAC    6
+  FRDDEMND SQIN   1
+MEAN-Q      MQ2-DIVERSION AFTER SHARP START AND FINISH
+  FRDDEMND SQIN    6  FRDDEMND SQME   24
+#
+# --------------- Total Plotting and Analysis --------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Total Flow and Diversion Plots
+#
+PLOT-TS     TOT&DIV
+TOTAL AND DIVERSION          3    2    5
+ ARIT              0         2    4              #--Supply-unlimited diversion
+  FRCNLOBS DQME   24        FRCNL  OBS      o       #    Observed diversion
+  FRDDEMND SQME   24        SHARP DEMAND    s       #    Diversion computed without supply limits, sharp start/end
+  PCPNDIV  SQME   24        UNLIMD SUPPLY   d       #    Diversion computed without supply limits       
+  CUDIV    SQME   24        CU DIVERSION    c       #    Diversion computed by the consumptive use model
+ ARIT              0         1    1              #--Precipitation sum  
+  SUMMAP   SQIN    6        MAP SUM         m       #    14-day sum of precipitation
+#
+#
+## Diversion statistics
+#
+STAT-QME    ST3-DIVERSION
+DIVS-NO SUPPLY LIMIT      999.  FRDDEMND SQME   24  FRCNLOBS DQME   24
+STOP

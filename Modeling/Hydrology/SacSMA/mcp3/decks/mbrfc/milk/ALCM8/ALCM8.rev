@@ -1,0 +1,161 @@
+ACMM8  Alkali Creek Nr Malta 
+   10 1980    9 2004   ENG
+#   10 1980    9 2004   Simulation to make data available downstream
+#  10 1994   10 2003 Full diversion data available at DDAM8
+#   10 1948    9 2004 Basin calibration period
+# 
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+3049       MAP     6            INPUT
+MAP/3049.MAP06
+3049       MAT     6            INPUT
+MAT/3049.MAT
+3049       SASC    6
+3049       SWE     6
+3049       RAIM    6
+3049       INFW    6
+3049       ROCL   24
+3049       SMZC   24
+# ----- Regulation Modeling -------------------------
+# No diversions or ungaged local irrigation reported
+# ----- Upstream Return Flows -----------------------
+# For 3 sqkm irrigated through Dodson South Canal
+UPSTRRET   SQIN    6            INPUT
+ReturnFlows/DDAM8_ALCM8.RET.SQIN
+# ----- Observed Streamflow Observations ------------
+# No data available
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# None
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            INTERNAL
+ROUTED     SQME   24            INTERNAL
+# ----- Computed Local Natural Flows ----------------
+# Not available (no downstream observations)
+# ----- Simulated Local Natural Flows ---------------
+3049       SQIN    6
+3049       SQME   24
+# ----- Simulated Total Observed Flows --------------
+ALCM8      SQIN    6            OUTPUT
+TotQINE/ALCM8.TOT.SQIN                                                 (6F10.2)
+ALCM8      SQME   24            OUTPUT
+NatQME/ALCM8.LOC.NAT.SQME                                              (6F10.2)
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Route the return flows from DDAM8
+##(Equivalent recession coefficient 0.1)
+#
+LAG/K       UPSTRRETURN 
+UPSTRRET SQIN  6                      0     0 ENGL    0         0
+       10.
+      240.
+         0
+#
+## Compute routed flow
+## These include the return flows from the areas irrigated through
+## upstream diversions in DDAM8
+#
+WEIGH-TS    WT1-ROUTED
+    1       ROUTED   SQIN    6
+UPSTRRET  SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modelling
+#
+SNOW-17     SN1-UPR
+3049                 764.  45.            YES SUMS           RDCO
+    6  3049     MAP      1.000       3049     RAIM
+  3049     MAT     6      764.  0.6  0.6
+  3049     SWE     6            3049     SASC    6
+ 1.25 1.100.3000.1009999.    0
+0.1500.2000.000 1.000.0500.100
+  .10  .16  .25  .33  .41  .48  .55  .64  .74
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+3049                         6  3049     RAIM       3049     INFW
+  3049     SASC    6  3049      3049     SUMS                FRZE
+                    1.0001.000 30.0 50.00.4000.0000.0000.030    0  .00
+                     75.0 2.50 180. 45.0 80.00.1000.0050.300 .300  .00
+                    0.500.771.402.754.044.845.675.263.522.000.930.57
+                       1.  0.0   1.  0.0   1.   1.    0
+  3049     MAT     6                 3049     SWE     6
+0.1000.0800.050 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3049 
+3049                           201.    5           ENGL     0.000
+  3049     INFW    6  3049     SQIN    6
+    3152.0    7594.1    6212.3    3264.9    1346.6
+MEAN-Q      MQ1-3049    
+  3049     SQIN    6  3049     SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#
+#CHANLOSS    SFBM8
+#ASSUMED LOSS         VARC
+#ALCM8      SQIN    6
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#
+#&& Replaced by modeling end
+#
+## Compute Simulated Downstream Flows
+## No return flows from locally irrigated lands to include
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       ALCM8    SQIN    6
+3049      SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ5-GSCM8   
+  ALCM8    SQIN    6  ALCM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment 
+## Not possible
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+## Not possible
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT-ALCM8
+COMPARE LAG TO INST          3    1    1
+ ARIT   40         0        40    1           #--Routed flows    
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed plus upstream returns    
+#
+## Returns
+#
+PLOT-TS     TOT&DIV
+SIMULATED DIVERSIONS         3    2    4    0
+ ARIT   20         0        40    1           #--Total flow 
+  ALCM8    SQIN    6        TOTALSIM        t    # Simulated total
+ ARIT   20         0        40    3           #--Total flow components
+  ALCM8    SQIN    6        TOTALSIM        t    # Simulated total
+  3049     SQIN    6        LOCAL           l    # Local runoff
+  ROUTED   SQIN    6        UPSTREAM        u    # Sum of routed plus upstream returns
+#
+## Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY1-LOCALNATURAL
+ALCM8                   1 SLOG      520.   25  YES
+  3049     SQME       SIMULATEDLOC    s
+  3049     RAIM    6            3049                3049     SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             520.    3049     SQME   24  3049     SQME   24
+STOP

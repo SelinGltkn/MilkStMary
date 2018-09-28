@@ -1,0 +1,329 @@
+BSMM8 Big Sandy Creek near Havre
+   10 1954   9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+# Time series for 3059 and 3060, which
+# are modelled in this deck
+# 3059: Sage Creek near Gilford
+# 3060: Mouth of Lonesome Coulee
+3059       MAP     6            INPUT
+MAP/3059.MAP06
+3059       MAT     6            INPUT
+MAT/3059.MAT
+3059       SASC    6
+3059       SWE     6
+3059       RAIM    6
+3059       ROCL   24
+3059       SMZC   24
+3059       INFW    6
+3059       SQIN    6
+3060       MAP     6            INPUT
+MAP/3060.MAP06
+3060       MAT     6            INPUT
+MAT/3060.MAT
+3060       SASC    6
+3060       SWE     6
+3060       RAIM    6
+3060       ROCL   24
+3060       SMZC   24
+3060       INFW    6
+3060       SQIN    6
+# BSMM8 time series
+BSMM8UP    MAP     6            INPUT
+MAP/bsmm8upr.MAP06
+BSMM8UP    MAT     6            INPUT
+MAT/bsmm8upr.MAT
+BSMM8UP    SASC    6
+BSMM8UP    SWE     6
+BSMM8UP    RAIM    6
+BSMM8UP    ROCL   24
+BSMM8UP    SMZC   24
+BSMM8UP    INFW    6
+BSMM8UP    SQIN    6
+BSMM8UP    SQME   24
+BSMM8LO    MAP     6            INPUT
+MAP/bsmm8lwr.MAP06
+BSMM8LO    MAT     6            INPUT
+MAT/bsmm8lwr.MAT
+BSMM8LO    SASC    6
+BSMM8LO    SWE     6
+BSMM8LO    RAIM    6
+BSMM8LO    ROCL   24
+BSMM8LO    SMZC   24
+BSMM8LO    INFW    6
+BSMM8LO    SQIN    6
+BSMM8LO    SQME   24
+3030       RAIM    6
+3030       ROCL   24
+3030       SMZC   24
+3030       INFW    6
+3030       SQIN    6
+3030       SQME   24
+BSMM8      RAIM    6
+BSMM8      ROCL   24
+BSMM8      SMZC   24
+BSMM8      INFW    6
+# ----- Regulation Modeling -------------------------
+# Local diversions for 3.9 sqkm irrigation ignored for now
+# ----- Upstream Return Flows -----------------------
+# None (Headwater without trans-basin diversions)
+# ----- Observed Streamflow Observations ------------
+BSMM8      QME    24            INPUT
+TotQME/BSMM8.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# Currently not modelled
+# ------------ Internal Routed Flows ----------------
+3059RTD    SQIN    6
+3059RTD    SQME   24
+3060RTD    SQIN    6
+3060RTD    SQME   24
+# ----- Computed Local Natural Flows ----------------
+# Same as observed (No irrigation modelled)
+# ----- Simulated Local Natural Flows ---------------
+# Same as total (No irrigation modelled)
+# ----- Simulated Total Observed Flows --------------
+BSMM8      SQIN    6            OUTPUT
+TotQINE/BSMM8.TOT.SQIN                                                 (6F10.2) 
+BSMM8      SQME   24            OUTPUT
+TotSQME/BSMM8.TOT.SQME                                                 (6F10.2) 
+BSMM8      QINE    6            OUTPUT
+TotQINE/BSMM8.TOT.QINE                                                 (6F10.2) 
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modelling 3059
+#
+SNOW-17     SN1-3059
+3059                 976.  41.            YES SUMS           RDCO
+    6  3059     MAP      1.000       3059     RAIM
+  3059     MAT     6     1076.  0.6  0.6
+  3059     SWE     6            3059     SASC    6
+ 1.00 1.100.5000.1509999.    0
+0.1500.2000.000 1.000.0500.300
+  .34  .54  .68  .78  .85  .89  .93  .96  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3059
+3059                         6  3059     RAIM       3059     INFW
+  3059     SASC    6  3059      3059     SUMS                FRZE
+                    1.0001.000 100. 50.00.2500.0000.0000.010    0  .00
+                     70.0 2.00 150. 50.0 80.00.0900.0040.250 .300  .00
+                    0.470.741.322.523.804.705.454.893.231.910.870.53
+                      0.0  0.0   1.  0.0   1.   1.    0
+  3059     MAT     6                 3059     SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge from Local 3059 Contribution
+#
+UNIT-HG     UH1-3059
+3059                           876.   12           ENGL     0.000
+  3059     INFW    6  3059     SQIN    6
+     845.3    5206.1   10890.1   14635.6   15435.7   13965.6   11366.8
+    8562.1    6079.8    4119.3    2215.6     871.5
+#
+## Route 3059 Discharge to BSMM8 outlet
+#
+LAG/K      LK3-3059
+3059     SQIN  6 3059RTD  SQIN  6     0     0         0         0
+5.
+0.
+0
+MEAN-Q      3059
+  3059RTD  SQIN    6  3059RTD  SQME   24
+#
+## Snow and Soil Modelling 3060
+#
+SNOW-17     SN1-3060
+3060                 880.  41.            YES SUMS           RDCO
+    6  3060     MAP      1.000       3060     RAIM
+  3060     MAT     6      980.  0.6  0.6
+  3060     SWE     6            3060     SASC    6
+ 1.00 1.100.5000.1509999.    0
+0.1500.2000.000 1.000.0500.300
+  .34  .54  .68  .78  .85  .89  .93  .96  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3060
+3060                         6  3060     RAIM       3060     INFW
+  3060     SASC    6  3060      3060     SUMS                FRZE
+                    1.0001.000 100. 50.00.2500.0000.0000.010    0  .00
+                     70.0 2.00 150. 50.0 80.00.0900.0040.250 .300  .00
+                    0.510.811.442.704.014.955.785.223.482.060.960.58
+                      0.0  0.0   1.  0.0   1.   1.    0
+  3060     MAT     6                 3060     SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge from Local 3060 Contribution
+#
+UNIT-HG     UH1-3060
+3060                           294.    6           ENGL     0.000
+  3060     INFW    6  3060     SQIN    6
+    3572.5    9809.9    9143.4    5475.6    2573.7    1037.7
+#
+## Route 3060 Discharge to BSMM8 outlet
+#
+LAG/K      LK3-3060
+3060     SQIN  6 3060RTD  SQIN  6     0     0         0         0
+5. 
+0.
+0
+MEAN-Q      3060
+  3060RTD  SQIN    6  3060RTD  SQME   24
+#
+## Snow and Soil Modelling BSMM8 (3030)
+#
+SNOW-17     SN1-BSMM8UPR  
+UP BSMM8 ABV 2000ft 1382.  41.            YES SUMS           RDCO
+    6  BSMM8UP  MAP      1.000       BSMM8UP  RAIM
+  BSMM8UP  MAT     6     1482.  0.6  0.6
+  BSMM8UP  SWE     6            BSMM8UP  SASC    6
+ 1.00 1.100.5000.1509999.    0
+0.1500.2000.000 1.000.0500.300
+  .34  .54  .68  .78  .85  .89  .93  .96  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-BSMM8UPR
+UP BSMM8 ABV 2000ft          6  BSMM8UP  RAIM       BSMM8UP  INFW
+  BSMM8UP  SASC    6  BSMM8UP   BSMM8UP  SUMS                FRZE
+                    1.0001.000 100. 50.00.2500.0000.0000.010    0  .27
+                     70.0 2.00 150. 50.0 80.00.0900.0040.250 .300  .00
+                    0.540.821.322.213.273.944.854.382.941.610.800.55
+                      0.0  0.0   1.  0.0   1.   1.    0
+  BSMM8UP  MAT     6                 BSMM8UP  SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+SNOW-17     SN2-BSMM8LWR
+LO BSMM8 BLW 2000ft  899. 39.0            YES SUMS           RDCO
+    6  BSMM8LO  MAP      1.000       BSMM8LO  RAIM       
+  BSMM8LO  MAT     6      999.  0.6  0.6
+  BSMM8LO  SWE     6            BSMM8LO  SASC    6
+ 1.00 1.100.5000.1509999.    0
+0.1500.2000.000 1.000.0500.300
+  .34  .54  .68  .78  .85  .89  .93  .96  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC2-BSMM8LWR
+LO BSMM8 BLW 2000ft          6  BSMM8LO  RAIM       BSMM8LO  INFW
+  BSMM8LO  SASC    6  BSMM8LO   BSMM8LO  SUMS                FRZE
+                    1.0001.000 100. 50.00.2500.0000.0000.010    0  .01
+                     70.0 2.00 150. 50.0 80.00.0900.0040.250 .300  .00
+                    0.500.791.412.653.954.885.695.143.412.000.930.57
+                      0.0  0.0   1.  0.0   1.   1.    0
+  BSMM8LO  MAT     6                 BSMM8LO  SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge from Local BSMM8 Contribution
+#
+WEIGH-TS    WT1-SUMINFLO
+    2       3030     INFW    6
+BSMM8UP   INFW       0.11
+BSMM8LO   INFW       0.89
+UNIT-HG     UH1-3030 
+3030                           634.   10           ENGL     0.000
+  3030     INFW    6  3030     SQIN    6
+    1330.9    6868.9   12031.9   13541.0   11958.4    9060.5    6175.0
+    3895.3    2315.9     994.3
+MEAN-Q      MQ4-3030 LOC
+  3030     SQIN    6  3030     SQME   24
+#
+## The following operations compute the portion of the total Q from upper/lower areas
+#
+WEIGH-TS    WT2-UPPER
+    1       BSMM8UP  INFW    6
+BSMM8UP   INFW      0.11
+UNIT-HG     UH2-BSMM8
+BSMM8                          634.   10           ENGL     0.000
+  BSMM8UP  INFW    6  BSMM8UP  SQIN    6
+    1330.9    6868.9   12031.9   13541.0   11958.4    9060.5    6175.0
+    3895.3    2315.9     994.3
+MEAN-Q      MQ2-BSMM8UP
+  BSMM8UP  SQIN    6  BSMM8UP  SQME   24
+WEIGH-TS    WT3-LOWER
+    1       BSMM8LO  INFW    6
+BSMM8LO   INFW      0.89
+UNIT-HG     UH3-BSMM8
+BSMM8                          634.   10           ENGL     0.000
+  BSMM8LO  INFW    6  BSMM8LO  SQIN    6
+    1330.9    6868.9   12031.9   13541.0   11958.4    9060.5    6175.0
+    3895.3    2315.9     994.3
+MEAN-Q      MQ3-BSMM8LO
+  BSMM8LO  SQIN    6  BSMM8LO  SQME   24
+#
+## Operations required for plotting
+#
+WEIGH-TS    WT3
+    3       BSMM8    INFW    6
+3030      INFW      1.000
+3060      INFW      1.000
+3059      INFW      1.000
+WEIGH-TS    WT4
+    4       BSMM8    RAIM    6
+BSMM8UP   RAIM       0.11
+BSMM8LO   RAIM       0.89
+3060      RAIM      1.000
+3059      RAIM      1.000
+WEIGH-TS    WT5
+    4       BSMM8    ROCL   24
+BSMM8UP   ROCL       0.11
+BSMM8LO   ROCL       0.89
+3060      ROCL      1.000
+3059      ROCL      1.000
+WEIGH-TS    WT6
+    4       BSMM8    SMZC   24
+BSMM8UP   SMZC       0.11
+BSMM8LO   SMZC       0.89
+3060      SMZC      1.000
+3059      SMZC      1.000
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute Discharge at BSMM8 Outlet
+#
+WEIGH-TS    WT2-BSMM8
+    3       BSMM8    SQIN    6
+3059RTD   SQIN      1.000
+3060RTD   SQIN      1.000
+3030      SQIN      1.000
+MEAN-Q      MQ1-BSMM8
+  BSMM8    SQIN    6  BSMM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-BSMM8
+BSMM8                   0    1    0
+BSMM8      QME    24
+BSMM8      SQIN    6
+BSMM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# Headwater Without Diversions: Not Necessary
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY2-LOCALNATURAL
+BCNM8                   6 SLOG     4683.   20  YES
+  BSMM8    QME         OBSERVEDNAT     o
+  BSMM8    SQME        SIMULATEDTOT    s
+  BSMM8UP  SQME        BSMM8_UP        u
+  BSMM8LO  SQME        BSMM8_LO        l
+  3059RTD  SQME        3059_RTD        5
+  3060RTD  SQME        3060_RTD        6
+  BSMM8    RAIM    6            BSMM8               BSMM8    SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS            4683.    BSMM8    SQME   24  BSMM8    QME    24
+PEAKFLOW   BSMM8
+instantaneous         06139500  BSMM8    SQIN
+    6    2    0    0    BSMM8.OBS.PEAK
+STOP

@@ -1,0 +1,580 @@
+CCMM8  Clear Cr. nr Chinook MT
+   10 1980    9 2004
+#   10 1980    9 2004   Simulation to make data available downstream
+#   10 1983    9 2004   Evaluation period
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+CCMM8UP    MAP     6            INPUT
+MAP/ccmm8upr.MAP06
+CCMM8UP    MAT     6            INPUT
+MAT/ccmm8upr.MAT
+CCMM8UP    SASC    6
+CCMM8UP    SWE     6
+CCMM8UP    RAIM    6
+CCMM8UP    INFW    6
+CCMM8UP    ROCL   24
+CCMM8UP    SMZC   24
+CCMM8UP    SQIN    6
+CCMM8UP    SQME   24
+CCMM8LO    MAP     6            INPUT
+MAP/ccmm8lwr.MAP06
+CCMM8LO    MAT     6            INPUT
+MAT/ccmm8lwr.MAT
+CCMM8LO    SASC    6
+CCMM8LO    SWE     6
+CCMM8LO    RAIM    6
+CCMM8LO    INFW    6
+CCMM8LO    ROCL   24
+CCMM8LO    SMZC   24
+CCMM8LO    SQIN    6
+CCMM8LO    SQME   24
+3012       RAIM    6
+3012       INFW    6
+3012       ROCL   24
+3012       SMZC   24
+# ----- Regulation Modeling ------------------------
+# For the local irrgiation of 6 sqkm
+# Average MAT
+MAT        INFW    6            INTERNAL
+AVGMAT     SQIN    6            INTERNAL
+AVGMAT     MAT     6            INTERNAL
+# Consumptive use model
+UNLIMITD   SQME   24            INTERNAL
+REMAIN     SQME   24            INTERNAL
+RFIN       SQME   24            INTERNAL
+RFOUT      SQME   24            INTERNAL
+OTHLOSS    SQME   24            INTERNAL
+CROPDMD    SQME   24            INTERNAL
+CROPET     MAPE   24            INTERNAL
+# Consumptive use model estimate of diversion
+CUDIV      SQME   24            INTERNAL
+CUDIV      SQIN    6            INTERNAL
+# Precip sum
+SUMMAP     SQIN    6            INTERNAL
+PERCENT    DFAC    6            INTERNAL
+# Diversion reduced in high precip periods
+PCPNDIV    SQIN    6            INTERNAL
+PCPNDIV    SQME   24            INTERNAL
+# Julian date
+JULDATE    SQIN    6            INTERNAL
+CUTOFF     DFAC    6            INTERNAL
+# Diversion with clipped start/end 
+CLIPDDIV   SQME   24            INTERNAL
+# Staff Reservoir
+STAFFIN    SQIN    6            INTERNAL
+STAFFBY    SQIN    6            INTERNAL
+STAFFOUT   SQIN    6            INTERNAL
+STAFF      SPEL    6            INTERNAL
+# Available to divert
+AVAIL      SQIN    6            INTERNAL
+AVAIL      SQME   24            INTERNAL
+# Excess diversion
+ABVLIM     SQIN    6            INTERNAL
+# Final diversion
+CCMM8DIV   SQIN    6            INTERNAL
+CCMM8DIV   SQME   24            INTERNAL
+# Return flow
+DIVLOSS    SQIN    6            INTERNAL
+ALLRETUR   SQIN    6            INTERNAL
+CCMM8RET   SQIN    6            OUTPUT
+ReturnFlows/CCMM8_CCMM8.RET.SQIN                                       (6F10.2)                            
+CCMM8RET   SQME   24            INTERNAL
+# ----- Upstream Return Flows -----------------------
+# None (Headwater without trans-basin diversions)
+# ----- Observed Streamflow Observations ------------
+CCMM8      QIN     6
+CCMM8      QME    24            INPUT
+TotQME/CCMM8.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Sum of Routed Flows -------------------------
+# None (Headwater)
+# ----- Computed Local Natural Flows ----------------
+3012       QIN     6
+3012       QME    24            OUTPUT
+NatQME/CCMM8.LOC.NAT.QME                                               (6F10.2)
+# ----- Simulated Local Natural Flows ---------------
+3012       SQIN    6
+3012       SQME   24
+# ----- Simulated Total Observed Flows --------------
+CCMM8      SQIN    6
+CCMM8      SQME   24
+CCMM8      QINE    6            OUTPUT
+TotQINE/CCMM8.TOT.QINE                                                 (6F10.2)
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-UPR
+UP CCMM8 ABV 4000ft 1406.  45.            YES SUMS           RDCO
+    6  CCMM8UP  MAP      1.000       CCMM8UP  RAIM
+  CCMM8UP  MAT     6     1406.  0.6  0.6
+  CCMM8UP  SWE     6            CCMM8UP  SASC    6
+1.000 1.000.5000.1509999.    0
+0.1500.2000.000 1.000.0500.200
+  .28  .41  .55  .65  .73  .79  .84  .90  .94
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+UP CCMM8 ABV 4000ft          6  CCMM8UP  RAIM       CCMM8UP  INFW
+  CCMM8UP  SASC    6  CCMM8UP   CCMM8UP  SUMS                FRZE
+                    1.0001.000 70.0 40.00.4000.0000.0000.040    0  .22
+                     100. 2.00 200. 60.0 100.0.1000.0060.200 .300  .00
+                    0.580.840.922.123.133.914.714.362.921.610.650.59 
+                       1.  0.0   1.  0.0   1.   1.    0
+  CCMM8UP  MAT     6                 CCMM8UP  SWE     6
+0.1000.0800.050 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+SNOW-17     SN2-LWR
+LO CCMM8 BLW 4000ft 1016.  45.            YES SUMS           RDCO
+    6  CCMM8LO  MAP      1.000       CCMM8LO  RAIM
+  CCMM8LO  MAT     6     1016.  0.6  0.6
+  CCMM8LO  SWE     6            CCMM8LO  SASC    6
+ 1.00 1.000.5000.1509999.    0
+0.1500.2000.000 1.000.0500.200
+  .28  .41  .55  .65  .73  .79  .84  .90  .94
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC2-LWR
+LO CCMM8 BLW 4000ft          6  CCMM8LO  RAIM       CCMM8LO  INFW
+  CCMM8LO  SASC    6  CCMM8LO   CCMM8LO  SUMS                FRZE
+                    1.0001.000 70.0 40.00.4000.0000.0000.040    0  .03
+                     100. 2.00 200. 60.0 100.0.1000.0060.200 .300  .00
+                    0.540.790.962.463.674.655.354.943.281.920.650.60 
+                       1.  0.0   1.  0.0   1.   1.    0
+  CCMM8LO  MAT     6                 CCMM8LO  SWE     6
+0.1000.0800.050 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0
+WEIGH-TS    WT1-SUMINFLO
+    2       3012     INFW    6
+CCMM8UP   INFW       0.46
+CCMM8LO   INFW       0.54
+WEIGH-TS    WE2
+    2       3012     RAIM    6
+CCMM8UP   RAIM       0.46
+CCMM8LO   RAIM       0.54
+WEIGH-TS    WE3
+    2       3012     ROCL   24
+CCMM8UP   ROCL       0.46
+CCMM8LO   ROCL       0.54
+WEIGH-TS    WE4
+    2       3012     SMZC   24
+CCMM8UP   SMZC       0.46
+CCMM8LO   SMZC       0.54
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3012 
+CCMM8                          139.    6           ENGL     0.000
+  3012     INFW    6  3012     SQIN    6
+    1415.5    4251.6    4335.4    2840.3    1460.0     643.6
+MEAN-Q      MQ1-3012    
+  3012     SQIN    6  3012     SQME   24
+#
+## The following operations compute the portion of the total Q from upper/lower areas
+#
+WEIGH-TS    WT2-UPPER
+    1       CCMM8UP  INFW    6
+CCMM8UP   INFW      0.46
+UNIT-HG     UH2-CCMM8
+CCMM8                          139.    6           ENGL     0.000
+  CCMM8UP  INFW    6  CCMM8UP  SQIN    6
+    1415.5    4251.6    4335.4    2840.3    1460.0     643.6
+MEAN-Q      MQ2-CCMM8UP
+  CCMM8UP  SQIN    6  CCMM8UP  SQME   24
+WEIGH-TS    WT3-LOWER
+    1       CCMM8LO  INFW    6
+CCMM8LO   INFW      0.54
+UNIT-HG     UH3-CCMM8
+CCMM8                          139.    6           ENGL     0.000
+  CCMM8LO  INFW    6  CCMM8LO  SQIN    6
+    1415.5    4251.6    4335.4    2840.3    1460.0     643.6
+MEAN-Q      MQ3-CCMM8LO
+  CCMM8LO  SQIN    6  CCMM8LO  SQME   24
+#
+# --------------- Regulation Modeling ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Use CONS_USE model and adjustments to model the irrigation diversions. 
+#
+## Create an unlimited supply 
+#
+SET-TS      UNLIMITD
+  UNLIMITD SQME   24   99999999.0
+#
+## Take 7-day average MAT for input into CONS_USE model instead of 6-hour 
+## MAT. Assume that most crop grow in the lower area of the sub-basin.
+#
+LOOKUP      AVG_MAT1
+    2    0
+CCMM8LO   MAT      6
+MAT       INFW     6
+      -500.0      -500.0       500.0       500.0 
+UNIT-HG     AVG_MAT2
+AVERAGE MAT OVER 7 DAYS       0.0093  28           ENGL     0.000
+  MAT      INFW    6  AVGMAT   SQIN    6
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+LOOKUP      AVG_MAT3
+    2    0
+AVGMAT    SQIN     6
+AVGMAT    MAT      6
+      -500.0      -500.0       500.0       500.0 
+#
+## Consumptive Use Model (return flows turned off)
+## for the irrigation of 6.1 sqkm ungaged lands
+#
+CONS_USE    CCMM8
+CCMM8 CONSUMPTIVE USE
+0
+AVGMAT MAT  UNLIMITD SQME
+REMAIN SQME CUDIV SQME
+RFIN SQME RFOUT SQME OTHLOSS SQME CROPDMD SQME CROPET MAPE
+ 48.0  6.1  0.40 0.0
+0.00 0.00 0.00 0.40 0.60 0.60
+0.60 0.60 0.60 0.30 0.00 0.00
+    0.00     0.00     0.00
+CHANGE-T    CT2-CUDIV
+  CUDIV    SQME   24  CUDIV    SQIN    6
+#
+## Compute moving sum of RAIM 
+#
+UNIT-HG     SUMMAP
+SUM RAIM OVER 21 DAYS         0.8000  84           ENGL     0.000
+  3012     RAIM    6  SUMMAP   SQIN    6
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+#
+## Create a scaling time series, representing a fraction of the originally
+## computed diversion that will be diverted. If it rains more than 3.0 inches 
+## over 2 weeks, a reduction in the diversion begins, up to a maximum reduction 
+## of 100%.
+#
+LOOKUP      MAPPRCNT 
+    3    0
+SUMMAP    SQIN     6
+PERCENT   DFAC     6
+         0.0         1.0         3.0         1.0      1000.0         0.0
+#
+## Multiply the scaling factor times the diversion to reduce the diversion
+## in wet periods
+#
+MULT/DIV    MAPPRCNT
+  CUDIV    SQIN    6  PERCENT  DFAC    6
+  PCPNDIV  SQIN   1
+#
+## Use CHANLOSS, LOOKUP, and MULT/DIV to set the start and end dates for 
+## the demand
+#
+SET-TS      JULIAN  
+  JULDATE  SQIN    6          0.0
+CHANLOSS    JULIAN 
+CREATE JULIAN DATE   VARC
+JULDATE    SQIN    6
+      -15.      -46.      -74.     -105.     -135.     -166.
+     -196.     -227.     -258.     -288.     -319.     -349.
+LOOKUP      DATECUT
+    4   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+        105.         0.0        121.         1.0        258.         1.0
+        274.         0.0          
+MULT/DIV    DATECUT
+  PCPNDIV  SQIN    6  CUTOFF   DFAC    6
+  CCMM8DIV SQIN   1
+#
+## Compute flows available to divert (supply limitation)
+## These seem to be stored in a reservoir (Staff Reservoir) in the spring for
+## use later in the year
+#
+#
+## Assume that a varying portion of the generated runoff is diverted into
+## Staff Reservoir based on the time of the year (80% in the spring,
+## 40% the remainder of the year)
+#
+LOOKUP      2DATECUT
+    4   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+          1.         0.8         90.         0.8        104.         0.4
+        365.         0.4          
+#
+## Multiply the flows in the sub-basin with the fraction to get the inflows
+#
+MULT/DIV    2DATECUT
+  3012     SQIN    6  CUTOFF   DFAC    6
+  STAFFIN  SQIN   1
+#
+## The remainder of the flow passes by Staff reservoir
+#
+WEIGH-TS    STAFFBY
+    2       STAFFBY  SQIN    6
+3012      SQIN       1.00
+STAFFIN   SQIN      -1.00
+#
+## Modeling of Staff Reservoir
+## Note that the elevation storage curve is fictional - only inflows and
+## releases are important. The storage elevation curve is fictional, this has
+## no effect since no pool elevations are available and we assume the off-line
+## reservoir not to spill
+#
+RES-J       STAFFRESERVOIR
+
+  TIMESERIES
+     TIMESTEP        06
+        INPUT   STAFFIN  SQIN 06 STAFF_INFLOW   #COMPUTED INFLOWS
+        INPUT   CCMM8DIV SQIN 06 STAFF_DEMAND   #COMPUTED DEMAND
+        OUTPUT  STAFFOUT SQIN 06 STAFF_RELEAS   #SIMULATED RELEASE
+        OUTPUT  STAFF    SPEL 06 STAFF_POOL     #SIMULATED POOL
+   ENDTIMESERIES
+
+   TOPOLOGY
+     RESERVOIR  STAFFRES
+   ENDTOPOLOGY
+
+   PARAMETERS
+   UNITS ENGLISH
+     RESERVOIR STAFFRES
+       TSINPUT  INFLOW  STAFF_INFLOW  
+       TSOUTPUT RELEASE STAFF_RELEAS
+       TSOUTPUT POOL    STAFF_POOL
+       TABLE   elev_stor
+        2950.00       0.0
+        3050.00   30000.0    
+       ENDTABLE 
+       MINPOOL          2950.0
+       MINRELEASE          0.0
+       INITIALPOOL      2950.0    
+       INITIALRELEASE     0.00        
+       INITIALWITHDRAW  000.00     
+       INITIALINFLOW      0.00    
+       PREVIOUSRELEASE    0.00      
+       PREVIOUSPOOL     2950.0    
+       PREVIOUSWITHDRAW 000.00     
+       PREVIOUSINFLOW     0.00    
+     ENDRESERVOIR
+
+#*************BEGIN METHOD DEFINITION************************
+# Pass flows
+  SETRELEASE  STAFFRES  FALLWINTER
+     TSINPUT      OBSERVEDRELEASE    STAFF_INFLOW
+     VALUES
+     ELEV  2950   2955  2960  2990   ENDELEV
+     01/01  0      20   100   100
+     12/31  0      20   100   100
+     ENDVALUES
+     INTERPOLATE ALL
+   ENDSETRELEASE
+
+# Release only the demand during the irrigation season  
+   SETRELEASE  STAFFRES  SPRINGSUMMER
+     TSINPUT  OBSERVEDRELEASE  STAFF_DEMAND
+     VALUES
+     ELEV  2950   2955  2960  2990   ENDELEV
+     01/01  0      3     3    3
+     02/01  0      0     0    0
+     05/15  0      15    15   15
+     05/30  0      30    30   30
+     07/01  0      30    30   30
+     09/01  0      3     3    3
+     12/31  0      3     3    3
+     ENDVALUES
+     INTERPOLATE ALL
+   ENDSETRELEASE
+   
+# Reduce releases when reservoir is close to empty   
+   SETRELEASE  STAFFRES  EMPTYING
+     VALUES
+     ELEV  2950   2951  2952  2990   ENDELEV
+     01/01  0      3     3    100
+     02/01  0      5     15   100
+     05/15  0      5     15   100
+     05/30  0      5     15   100
+     07/01  0      5     15   100
+     09/01  0      3     15   100
+     12/31  0      3     3    100
+     ENDVALUES
+     INTERPOLATE ALL
+   ENDSETRELEASE
+   
+   SETMIN   STAFFRES     SPRINGSUMMER
+      SETRELEASE  STAFFRES  SPRINGSUMMER
+      SETRELEASE  STAFFRES  EMPTYING
+   ENDSETMIN
+
+#*************END METHOD DEFINITION************************
+
+ENDPARAMETERS
+
+RULES
+
+  [TRUE]
+
+  [DATE < 02/01 || DATE >=  10/01]
+  ::SETRELEASE   STAFFRES  FALLWINTER 
+ 
+  [DATE >= 02/01 && DATE <  10/01]
+  ::SETMIN       STAFFRES  SPRINGSUMMER
+
+ENDRULES
+ENDRES-J
+#
+## Add the releases to the not diverted flows
+#
+WEIGH-TS    STAFFOUT
+    2       AVAIL    SQIN    6
+STAFFBY   SQIN       1.00
+STAFFOUT  SQIN       1.00
+#
+## Take minimum of flow available and diversion
+#
+ADD/SUB     ABVLIM1
+  ABVLIM   SQIN    6  CCMM8DIV SQIN    6  ADD 
+ADD/SUB     ABVLIM2
+  ABVLIM   SQIN    6  AVAIL    SQIN    6  SUB 
+ADD/SUB     ABVLIM3
+  CCMM8DIV SQIN    6  ABVLIM   SQIN    6  SUB
+MEAN-Q      CCMM8DIV 
+  CCMM8DIV SQIN    6  CCMM8DIV SQME   24
+#
+## Compute return flows (10% of diversions)
+#
+WEIGH-TS    RETURN
+    1       CCMM8RET SQIN    6
+CCMM8DIV  SQIN       0.10
+#
+## Attenuate the local return flows
+##(Equivalent recession coefficient = 0.006)
+#
+LAG/K       LOCALRETURN 
+CCMM8RET SQIN  6 CCMM8RET SQIN  6     0     0 ENGL    0         0
+        0.
+     4000.
+         0
+MEAN-Q      CCMM8RET 
+  CCMM8RET SQIN    6  CCMM8RET SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute Simulated Downstream Flows
+## includes return flows from locally irrigated lands 
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    3       CCMM8    SQIN    6
+AVAIL     SQIN       1.00
+CCMM8DIV  SQIN      -1.00
+CCMM8RET  SQIN       1.00
+MEAN-Q      MQ7-TOTAL SIMULATED INFLOWS
+  CCMM8    SQIN    6  CCMM8    SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-CCMM8
+CCMM8                   0    1    0
+CCMM8      QME    24
+CCMM8      SQIN    6
+CCMM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    CCMM8
+  CCMM8    QME    24  CCMM8    QIN     6
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    3       3012     QIN     6
+CCMM8     QIN        1.00
+CCMM8DIV  SQIN       1.00
+CCMM8RET  SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  3012     QIN     6  3012     QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Diversions and Returns
+#
+PLOT-TS     TOT&DIV
+SIMULATED DIVERSIONS         3    5   14    0
+ ARIT   20         0        10    3           #--Total flow 
+  CCMM8    QIN     6        DOWNSTR         d    # Observed total
+  CCMM8    SQIN    6        TOTALSIM        t    # Simulated total
+  3012     SQIN    6        LOCAL           l    # Local runoff - no regulation
+ ARIT   20         0        10    5           #--Total flow components
+  CCMM8    QIN     6        DOWNSTR         d    # Observed total
+  3012     SQIN    6        LOCAL           l    # Local runoff
+  CCMM8RET SQIN    6        LOCAL RETN      r    # Local return flows
+  CCMM8DIV SQIN    6        CCMM8DIV        s    # Simulated irrigation diversion (subtract)
+  CCMM8    SQIN    6        TOTALSIM        t    # Simulated total
+ ARIT   20         0         5    4            #--Irrigation diversion
+  CCMM8DIV SQIN    6        CCMM8DIV        s    # Simulated irrigation diversion
+  3012     SQIN    6        LOCAL           l    # Local runoff
+  AVAIL    SQIN    6        AVAILABLE       a    # Flow available to divert
+  CUDIV    SQIN    6        UNLIMITED       u    # CU diversion (unlimited by precip, available flow)
+ ARIT   20         0       0.2    1            #--Sum of RAIM
+  SUMMAP   SQIN    6        MAP             m
+ ARIT   20         0         1    1            #--Percent reduction for precip
+  PERCENT  DFAC    6        REDUCTION       r
+PLOT-TS     STAFFRES
+STAFF RESERVOIR              3    2    3    0
+ ARIT   20      895.      925.    1           #--Staff Reservoir 
+  STAFF    SPEL    6        POOL            d    # Simulated Pool
+ ARIT   20         0       20.    2           #--Total flow 
+  STAFFIN  SQIN    6        INFLOWS         i    # Inflows
+  STAFFOUT SQIN    6        RELEASES        r    # Releases 
+#
+## Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY1-LOCALNATURAL
+CCMM8                   2 SLOG      174.   10  YES
+  3012     QME         OBSERVED        n
+  3012     SQME        SIMULATEDLOC    s
+  CCMM8LO  RAIM    6            CCMM8LO             CCMM8LO  SMZC
+WY-PLOT     WY2-COMPONENTS
+CCMM8                   4 SLOG      174.   10  YES
+  3012     QME         OBSERVED        n
+  3012     SQME        SIMULATEDLOC    s
+  CCMM8UP  SQME        UPPER_PORTION   u
+  CCMM8LO  SQME        LOWER_PORTION   l
+  CCMM8UP  RAIM    6            CCMM8UP             CCMM8UP  SMZC
+WY-PLOT     WY3-TOTAL
+CCMM8                   2 SLOG      174.   10  YES
+  CCMM8    QME         OBSERVEDTOT     n
+  CCMM8    SQME        SIMULATEDTOT    s
+  3012     RAIM    6            3012                3012     SMZC
+#
+## Local and Total flow statistics
+#
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             174.    3012     SQME   24  3012     QME    24
+STAT-QME    NOCUTOTAL        
+TOTAL NO CU             174.    3012     SQME   24  CCMM8    QME    24
+STAT-QME    TOTAL        
+TOTAL WITH CU           174.    CCMM8    SQME   24  CCMM8    QME    24 1
+                           0.10 0.50 1.00 1.50 1.60 1.70
+PEAKFLOW   CCMM8
+instantaneous         06142400  CCMM8    SQIN
+    6    2    0    0    CCMM8.OBS.PEAK
+STOP

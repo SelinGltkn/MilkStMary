@@ -1,0 +1,240 @@
+SACM8  Milk River At Juneberg Bridge Near Saco, MT
+   10 1994   9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+SACM8      MAP     6            INPUT
+MAP/3032.MAP06
+SACM8      MAT     6            INPUT
+MAT/3032.MAT
+SACM8      SASC    6
+SACM8      SWE     6
+SACM8      RAIM    6
+SACM8      ROCL   24
+SACM8      SMZC   24
+SACM8      INFW    6
+# ----- Observed Streamflow Observations ------------
+SACM8      QME    24            INPUT
+TotQME/SACM8.OBS.QME
+SACM8      QIN     6
+CRCM8      SQIN    6            INPUT
+TotQINE/CRCM8.TOT.QINE
+3051       SQIN    6            INPUT
+TotQINE/3051.TOT.QINE
+3051RTD    SQIN    6
+3022       SQIN    6            INPUT
+TotQINE/3022.TOT.SQIN
+3022RTD    SQIN    6
+# ----- Gaged Diversions ----------------------------
+# Nelson North Canal into the Milk River  will 
+# initially be used instead of modeling 
+# Nelson Reservoir
+SACM8ODV   SQME   24            INPUT
+DQME/SACM8.OBS.DQME
+SACM8ODV   SQIN    6
+SACM8UPS   SQIN    6
+SACM8UPRD  SQIN    6
+# ----- Un-Gaged Diversions -------------------------
+SACM8DIV   SQIN    6
+SACM8DIV   SQME   24
+ROUTEDOD   SQIN    6
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            
+ROUTED     SQME   24            
+# ----- Computed Local Natural Flows ----------------
+SACM8NAT   QIN     6
+SACM8NAT   QME    24            OUTPUT
+NatQME/SACM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+SACM8LOC   SQIN    6
+SACM8LOC   SQME   24            OUTPUT
+NatSQME/SACM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+SACM8TOT   SQIN    6
+SACM8TOT   SQME   24            OUTPUT
+TotSQME/SACM8.TOT.SQME
+SACM8TOT   QINE    6            OUTPUT
+TotQINE/SACM8.TOT.QINE
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    SACM8
+  SACM8    QME    24  SACM8    QIN     6
+#
+## Route the upstream CRCM8 flow (simulated adjusted to observed)
+## Also add in the Nelson North Canal Releases
+CHANGE-T    SACM8ODV
+  SACM8ODV SQME   24  SACM8ODV SQIN    6
+WEIGH-TS    WT1-SACM8UPS
+    2       SACM8UPS SQIN    6
+CRCM8     SQIN       1.00
+SACM8ODV  SQIN       1.00  
+LAG/K       LK1-SACM8UPRD
+SACM8UPS SQIN  6 SACM8UPRDSQIN  6     2     2 ENGL 0.00       0.0
+       12   0   6    700
+        6   0   3    700
+           0
+#
+## Route the upstream 3051 flow (simulated adjusted to observed)
+#
+LAG/K       LK2-3051
+3051     SQIN  6 3051RTD  SQIN  6     2     2 ENGL 0.00       0.0
+       39   0  21    700
+       21   0   9    700            
+           0
+#
+## Route the upstream 3022 flow (simulated only)
+#
+LAG/K       LK3-3022
+3022     SQIN  6 3022RTD  SQIN  6     2     2 ENGL 0.00       0.0
+       6   0   3   700
+       3   0   0   700
+           0
+#
+## Compute routed flow
+WEIGH-TS    WT1-ROUTED
+    3       ROUTED   SQIN    6
+SACM8UPRD SQIN       1.00
+3051RTD   SQIN       1.00
+3022RTD   SQIN       1.00
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-SACM8     
+SACM8                788.  41.            YES SUMS           RDCO
+    6  SACM8    MAP      1.000       SACM8    RAIM
+  SACM8    MAT     6      788.  0.0  0.0
+  SACM8    SWE     6            SACM8    SASC    6
+ 1.05 1.100.2000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .17  .29  .42  .57  .69  .77  .83  .88  .93
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-SACM8   
+SACM8                        6  SACM8    RAIM       SACM8    INFW
+  SACM8    SASC    6  SACM8     SACM8    SUMS                FRZE
+                    1.0001.000 110. 60.00.2800.0000.0000.010    0  .00
+                     20.0 2.00 180. 30.0 80.00.0800.0020.200 .300  .00
+                    0.420.671.252.573.924.835.515.043.341.890.850.50
+                      0.0  0.0   0.  0.0   0.   0.    0
+  SACM8    MAT     6                 SACM8    SWE     6
+0.1000.0800.050 0.00 -3.00.050  8.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+### This is the scaled 3037 UNIT-HG. Replace!
+#
+UNIT-HG     UH1-SACM8
+SACM8                          812.   11           ENGL     0.000
+  SACM8    INFW    6  SACM8LOC SQIN    6
+    1328.6    7270.4   13505.7   16120.2   15099.2   12132.8    8770.4
+    5867.4    3699.9    2226.8    1290.5			
+MEAN-Q      MQ4-SACM8LOC
+  SACM8LOC SQIN    6  SACM8LOC SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Save the routed time series
+#
+WEIGH-TS    WT10-SAVESIMULATEDROUTEDNODIVERSION
+    1       ROUTEDOD SQIN    6
+ROUTED    SQIN       1.00
+#
+## Account for consumptive use
+## (from routed flows)
+#
+CHANLOSS    SACM8
+ASSUMED LOSS         VARC
+ROUTED     SQIN    6
+     0.0       0.0       0.0       0.2       0.5       3.5
+     1.5      -1.0      -1.0      -1.0       0.0       0.0
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  SACM8DIV SQIN    6
+WEIGH-TS    WT10-ACTUALDIVERSION
+    2       SACM8DIV SQIN    6
+ROUTEDOD  SQIN       1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-ESTIMATEDDIVERSION
+  SACM8DIV SQIN    6  SACM8DIV SQME   24
+#
+# Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       SACM8TOT SQIN    6
+SACM8LOC  SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ5-SACM8TOT
+  SACM8TOT SQIN    6  SACM8TOT SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-SACM8
+SACM8                   0    1    0
+SACM8      QME    24
+SACM8TOT   SQIN    6
+SACM8TOT   QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       SACM8NAT QIN     6
+SACM8     QIN        1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  SACM8NAT QIN     6  SACM8NAT QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT1-SACM8
+COMPARE LAG TO INST          3    1    3
+ ARIT   40         0       200    3
+  SACM8    QIN     6        DOWNSTR         d
+  3022     SQIN    6        3022            f
+  3022RTD  SQIN    6        3022RTD         3
+STAT-QME    LAG
+LAG ANALYSIS-SACM8      9999.9  ROUTED   SQME   24  SACM8    QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+SACM8                   2 SLOG     2104.  100  YES
+  SACM8NAT QME         OBSRVD_NAT      o
+  SACM8LOC SQME        SACM8_LOC       l
+  SACM8    RAIM    6            SACM8               SACM8    SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS            2104.    SACM8LOC SQME   24  SACM8NAT QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+SACM8                   4 SLOG    45077.   50  YES
+  SACM8    QME         OBSRVD_TOT      o
+  SACM8TOT SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  SACM8LOC SQME        SACM8_LOC       l
+  SACM8    RAIM    6            SACM8               SACM8    SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS           45077.    SACM8TOT SQME   24  SACM8    QME    24
+PEAKFLOW   SACM8
+instantaneous         06164510  SACM8TOT SQIN
+    6    2    0    0    SACM8.OBS.PEAK
+STOP

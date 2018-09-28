@@ -1,0 +1,186 @@
+GLWM8  Milk River at Glasgow
+   10 1994    8 2003
+#   10 1982    9 2003
+#   10 1994    8 2003 # With observed data
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+3035       MAP     6            INPUT
+MAP/3035.MAP06
+3035       MAT     6            INPUT
+MAT/3035.MAT
+3035       SASC    6
+3035       SWE     6
+3035       RAIM    6
+3035       ROCL   24
+3035       SMZC   24
+3035       INFW    6
+# ----- Upstream Return Flows -----------------------
+UPSTRRET   SQIN    6            INPUT
+ReturnFlows/3057_GLWM8.RET.SQIN
+# ----- Observed Streamflow Observations ------------
+# No downstream data are available for this POR, 
+# use NSHM8 just for comparison
+NSHM8      QME    24            INPUT
+TotQME/NSHM8.OBS.QME
+NSHM8      QIN     6
+TMPM8      QIN     6            INPUT
+TotQINE/TMPM8.TOT.QINE
+TMPM8      SQIN    6
+TMPM8RTD   SQIN    6
+WCGM8      SQIN    6            INPUT
+TotQINE/WCGM8.TOT.QINE
+WCGM8RTD   SQIN    6
+# ----- Gaged Diversions ----------------------------
+# None 
+# ----- Un-Gaged Diversions -------------------------
+# Not individually modelled 
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            INTERNAL
+ROUTED     SQME   24            INTERNAL
+# ----- Computed Local Natural Flows ----------------
+# cannot be computed                                        (6F10.2)
+# ----- Simulated Local Natural Flows ---------------
+3035       SQIN    6
+3035       SQME   24            OUTPUT
+NatSQME/GLWM8.LOC.NAT.SQME                                             (6F10.2)
+# ----- Simulated Total Observed Flows --------------
+GLWM8      SQIN    6            OUTPUT
+TotQINE/GLWM8.TOT.SQIN                                                 (6F10.2)
+GLWM8      SQME   24            OUTPUT
+TotSQME/GLWM8.TOT.SQME                                                 (6F10.2)
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval, NSHM8 is just 
+## for plotting
+#
+CHANGE-T    NSHM8
+  NSHM8    QME    24  NSHM8    QIN     6
+#
+## Route the upstream TMPM8 flow (simulated adjusted to observed)
+#
+NOMSNG     TMPM8
+  TMPM8    QIN     6  TMPM8    SQIN    0 1.0     0
+LAG/K       LK1-TMPM8
+TMPM8    SQIN  6 TMPM8RTD SQIN  6     4     2 ENGL 0.00       0.0
+      30   0  24   700  30   1400   21   2800
+      12   0   9   700
+           0
+#
+## Route the upstream WCGM8 flow (simulated adjusted to observed)
+#
+LAG/K       LK2-WCGM8
+WCGM8    SQIN  6 WCGM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+      12   0   6   700
+       6   0   3   700
+           0
+#
+## Route the return flows from Vandalia Canal (3057)
+##(Equivalent recession coefficient of 3500. is 0.007)
+#
+LAG/K       RETURN 
+UPSTRRET SQIN  6 UPSTRRET SQIN  6     0     0 ENGL    0         0
+        0.
+     3500.
+         0
+#
+## Compute routed flow
+## These include the return flows from the areas irrigated through
+## upstream diversions in 3057
+#
+WEIGH-TS    WT1-ROUTED
+    3       ROUTED   SQIN    6
+TMPM8RTD  SQIN       1.00
+WCGM8RTD  SQIN       1.00
+UPSTRRET  SQIN       1.00
+#
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-3035      
+3035                 730.  41.            YES SUMS           RDCO
+    6  3035     MAP      1.000       3035     RAIM
+  3035     MAT     6      730.  0.0  0.0
+  3035     SWE     6            3035     SASC    6
+ 1.200.9000.2000.1009999.    0
+0.1500.2000.000 1.000.0500.050
+  .47  .64  .71  .77  .82  .87  .91  .94  .97
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3035    
+3035                         6  3035     RAIM       3035     INFW
+  3035     SASC    6  3035      3035     SUMS                FRZE
+                    1.0001.000 50.0 70.00.2500.0000.0050.020    0  .00
+                     50.0 2.30 130. 25.0 60.00.0500.0070.300 .300  .00
+                    0.400.651.202.533.854.745.515.023.311.900.880.50
+                      5.0  0.0  20.  0.0  10.  25.    0
+  3035     MAT     6                 3035     SWE     6
+0.1000.0800.050 0.00 -3.00.000  8.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3035 
+3035                          493.0    7           ENGL     0.000
+  3035     INFW    6  3035     SQIN    6
+    3805.0   12845.0   14719.4   10837.6    6262.0    3103.9    1384.0
+MEAN-Q      MQ4-3035 LOC
+  3035     SQIN    6  3035     SQME   24
+#
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute Simulated Downstream Flows
+## includes return flows from locally irrigated lands 
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       GLWM8    SQIN    6
+3035      SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ5-GLWM8    
+  GLWM8    SQIN    6  GLWM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+# not possible
+#  
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+# not possible
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT-ROUTING
+COMPARE LAG TO INST          3    1    5
+ ARIT   40         0       200    5
+  NSHM8    QIN     6        NSHM8           d
+  GLWM8    SQIN    6        TOTALSIM        t
+  TMPM8RTD SQIN    6        TMPM8 ROUTED    1 
+  WCGM8RTD SQIN    6        WCGM8 ROUTED    2
+  ROUTED   SQIN    6        ROUTED          r
+STAT-QME    LAG
+LAG ANALYSIS-GLWM8      9999.9  ROUTED   SQME   24  NSHM8    QME    24
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+GLWM8                   4 SLOG    56683.   50  YES
+  NSHM8    QME         OBSRVD_TOT      o
+  GLWM8    SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  3035     SQME        GLWM8_LOC       l
+  3035     RAIM    6            3035                3035     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS           56683.    GLWM8    SQME   24  GLWM8    SQME   24
+STOP 

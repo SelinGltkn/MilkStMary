@@ -1,0 +1,238 @@
+SMBCA Canadian Share of Milk River
+   10 1980    9 2004
+DEF-TS
+# ----- Simulated Total Flows -----------------------
+# Inflows into Sherburne Reservoir
+SCSM8      SQME   24            INPUT
+TotSQME/SCSM8.TOT.SQME
+SCSM8      SQIN    6
+SCSM8RTD   SQIN    6
+# ----- Simulated Local Natural Flows ---------------  
+3003RTD    SQME   24            INPUT
+NatSQME/SMYM8.LOC.NAT.SQME
+3003RTD    SQIN    6
+SMYM8      SQIN    6
+SMYM8RTD   SQIN    6
+3004       SQME   24            INPUT
+NatSQME/SMBM8.LOC.NAT.SQME
+3004       SQIN    6
+SMBM8      SQIN    6
+SMBM8      SQME   24            OUTPUT
+NatSQME/SMBM8.TOT.NAT.SQME                                             (6F10.2)
+# ----- Observed Streamflow Observations ------------
+SMBM8      QME    24            INPUT
+TotQME/SMBM8.OBS.QME
+# ----- Modeling of Canadian Share-------------------
+JULDATE    SQIN    6
+IRRSEASN   DFAC    6
+SMBM8I     SQIN    6
+SMBCAI     SQIN    6
+REGSEASN   DFAC    6
+SMBM8R     SQIN    6
+SMBCAR     SQIN    6
+# ----- Simulated Canadian Share--------------------- 
+SMBCA      SQIN    6
+SMBCA      SQME   24            OUTPUT
+NatSQME/SMBCA.TOT.NAT.SQME                                             (6F10.2)
+SMBCAM     SQIN    6
+SMBCAM     SQME   24
+# ----- Canadian demand at SMYM8 --------------------
+CANDEM     SQIN    6            OUTPUT
+DEMAND/SMBCA.DEMAND_SMYM8.SQIN                                         (6F10.2)
+CANDEM     SQME   24
+CANCAP     SQIN    6            OUTPUT
+DEMAND/SMBCA.DEMCAP_SMYM8.SQIN                                         (6F10.2)
+CANCAP     SQME   24
+END
+#
+# --------------- Natural Flows at Boundary ----------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## These exclude the effects of Sherburne Reservoir and St. Mary Canal
+#
+## Route the Sherbourne Reservoir inflows
+#
+CHANGE-T    SCSM8
+  SCSM8    SQME   24  SCSM8    SQIN    6
+LAG/K       SCSM8
+SCSM8    SQIN  6 SCSM8RTD SQIN  6     0     0 METR 0.00       0.0
+      8.00
+     48.00
+           0
+#
+## Add to St. Mary at Babb local flows (already routed through the lakes)
+#
+CHANGE-T    3003
+  3003RTD  SQME   24  3003RTD  SQIN    6  
+WEIGH-TS    WT1-SMYM8   
+    2       SMYM8    SQIN    6
+3003RTD   SQIN       1.00
+SCSM8     SQIN       1.00  
+#
+## Route to the international boundary
+#
+LAG/K       SMYM8
+SMYM8    SQIN  6 SMYM8RTD SQIN  6     2     2 METR 0.00       0.0
+      6.00   0    3.00    15
+      3.00   0    1.00    15
+           0
+#
+## Add to the local contribution to get the simulated natural flows
+#
+CHANGE-T    3004
+  3004     SQME   24  3004     SQIN    6  
+WEIGH-TS    WT2-SMBM8  
+    2       SMBM8    SQIN    6
+SMYM8     SQIN       1.00
+3004      SQIN       1.00
+MEAN-Q      SMBM8
+  SMBM8    SQIN    6  SMBM8    SQME   24
+#
+# --------------- Canadian Share according the 1909 Treaty -------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Share depends on irrigation season (April 1 to October 31)
+#
+SET-TS      JULIAN  
+  JULDATE  SQIN    6          0.0
+CHANLOSS    JULIAN 
+CREATE JULIAN DATE   VARC
+JULDATE    SQIN    6
+      -15.      -46.      -74.     -105.     -135.     -166.
+     -196.     -227.     -258.     -288.     -319.     -349.
+#
+## Compute natural flows during the irrigation season: Set Dates
+#
+LOOKUP      IRRSEASN
+    6   -1
+JULDATE   SQIN     6
+IRRSEASN  DFAC     6
+          0.         0.0        90.          0.0         91.         1.0
+        304.         1.0       305.          0.0        365.         0.0
+MULT/DIV    IRRSEASN
+  SMBM8    SQIN    6  IRRSEASN DFAC    6
+  SMBM8I   SQIN   1
+#
+## Compute Canadian share during the irrigation season
+## These are: 75%           of flows below 666 cfs
+##            500 cfs + 50% of flows above 666 cfs
+#
+LOOKUP      CANIRR
+    7   -1
+SMBM8I    SQIN     6
+SMBCAI    SQIN     6
+          0.         0.0         1.         0.75        666.       500.0        
+        700.        517.      1000.        667.0      10000.      5167.0
+     100000.      50167.
+#
+## Compute natural flows during the non-irrigation (regular) season: Set Dates
+#
+LOOKUP      REGSEASN
+    6   -1
+JULDATE   SQIN     6
+REGSEASN  DFAC     6
+          0.         1.0        90.          1.0         91.         0.0
+        304.         0.0       305.          1.0        365.         1.0
+MULT/DIV    REGSEASN
+  SMBM8    SQIN    6  REGSEASN DFAC    6
+  SMBM8R   SQIN   1
+#
+## Compute Canadian share during the non-irrigation season
+## These are 50% of flows
+#
+WEIGH-TS    WT3-SMBCAR    
+    1       SMBCAR   SQIN    6
+SMBM8R    SQIN       0.50
+#
+## Add the mutually exclusive flows for the two seasons
+#
+WEIGH-TS    WT4-SMBCA    
+    2       SMBCA    SQIN    6
+SMBCAR    SQIN       1.0
+SMBCAI    SQIN       1.0
+MEAN-Q      MQ2-SMBCA
+  SMBCA    SQIN    6  SMBCA    SQME   24
+#
+## Modify the Candian share to better match the observations.
+## This time series is used only for camparison.
+#
+WEIGH-TS    WT5-SMBCAM   
+    1       SMBCAM   SQIN    6
+SMBCA     SQIN       1.0
+CHANLOSS    MODIFYSHARE 
+MODIFYSHARE          VARP
+SMBCAM     SQIN    6
+     -0.19     -0.70     -0.91      0.16      0.22     0.08
+      0.07      0.07     -0.17      0.02     -1.14    -0.37
+MEAN-Q      MQ3-SMBCAM
+  SMBCAM   SQIN    6  SMBCAM   SQME   24
+#
+# --------------- Canadian Demand at SMYM8 -----------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## This is the Canadian Demand at SMYM8, the most downstream point where 
+## operations at the St. Mary Canal or at Sherburne Reservoir can affect
+## the flows delivered to Canada. The demands are capped based on
+## observations, as it seems that Canada does not always insist of receiving
+## their alotted flows.
+#  
+ADD/SUB     CANDEM1
+  CANDEM   SQIN    6  SMBCA    SQIN    6
+ADD/SUB     CANDEM2
+  CANDEM   SQIN    6  3004     SQIN    6  SUB
+MEAN-Q      MQ4-CANDEM2
+  CANDEM   SQIN    6  CANDEM   SQME   24
+LOOKUP      CANCAP
+ 7       0
+CANDEM    SQIN     6
+CANCAP    SQIN     6
+ -10.0            -10.00         0.0        0.00         100         100
+ 500.0             500.0      1000.0       800.0      2000.0      1400.0
+3000.0            1800.0
+MEAN-Q      MQ5-CANCAP
+  CANCAP   SQIN    6  CANCAP   SQME   24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+PLOT-TS     SMBCA    
+OBSERVED FLOWS               3    1    6
+ ARIT   40         0       200    6           #--Flows at International Boundary 
+  SMBM8    QME    24        OBSERVED        o    # Observed total
+  SMBM8    SQME   24        NATURAL         n    # Natural total
+  SMBCA    SQME   24        CANADIAN        c    # Canadian share
+  SMBCAM   SQME   24        MODIFIEDCAN     m    # Modified Canadian share
+  CANDEM   SQME   24        CANAT SMYM8     s    # Canadian share at SMYM8
+  CANCAP   SQME   24        CAPPEDCAN       p    # Capped Canadian share at SMYM8
+STAT-QME    SQ1-SMBCA
+TOTAL FLOWS            1098.    SMBCA    SQME   24  SMBM8    QME    24
+STAT-QME    SQ1-CANCAP
+TOTAL FLOWS            1098.    CANCAP   SQME   24  SMBM8    QME    24
+STAT-QME    SQ2-SMBCAM
+TOTAL FLOWS            1098.    SMBCAM   SQME   24  SMBM8    QME    24
+STOP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

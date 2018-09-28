@@ -1,0 +1,160 @@
+3017   Battle Cr.abv Cypress Lake
+   10 1979    9 2004
+#   10 1979    9 2004# Calibration Period
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+# MAT and MAP data computed using incorrect basin boundaries!
+3017       MAP     6            INPUT
+MAP/3017.MAP06
+3017       MAT     6            INPUT
+MAT/3017.MAT.adjusted
+3017       SASC    6
+3017       SWE     6
+3017       RAIM    6
+3017       INFW    6
+3017       ROCL   24
+3017       SMZC   24
+# ----- Observed Streamflow Observations ------------
+3017       QME    24            INPUT
+TotQME/3017.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# Sum of Cypress Lake West Inflow Canal,
+# Gaff and Shepherd Ditches - no returns
+3017OBSD   SQME   24            INPUT
+DQME/3017.OBS.DQME
+3017OBSD   SQIN    6
+# ----- Un-Gaged Diversions -------------------------
+3017DIV    SQIN    6
+3017DIV    SQME   24
+# ----- Sum of Routed Flows -------------------------
+# Headwater
+# ----- Computed Local Natural Flows ----------------
+3017NAT    QME    24            OUTPUT
+NatQME/3017.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+3017LOC    SQIN    6
+3017LOC    SQME   24
+# ----- Simulated Total Observed Flows --------------
+3017TOT    SQIN    6
+3017TOT    SQME   24
+3017TOT    QINE    6            OUTPUT
+TotQINE/3017.TOT.QINE
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modelling
+#
+SNOW-17     SN1-UPR
+3017                1209.  45.            YES SUMS           RDCO
+    6  3017     MAP      1.100       3017     RAIM
+  3017     MAT     6     1209.  0.6  0.6
+  3017     SWE     6            3017     SASC    6
+ 1.40 1.100.3000.1509999.    0
+0.1500.2000.000 1.000.0500.100
+  .09  .22  .38  .49  .54  .57  .61  .66  .76
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+3017                         6  3017     RAIM       3017     INFW
+  3017     SASC    6  3017      3017     SUMS                FRZE
+                    1.0001.000 20.0 20.00.3000.0000.0000.010    0  .12
+                     100. 2.00 95.0 45.0 70.00.1200.0080.300 .300  .00
+                    0.380.581.032.063.364.134.904.272.771.590.710.45
+                       1.  0.0   1.  0.0   1.   1.    0
+  3017     MAT     6                 3017     SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+##### NOTE: Does include the northernmost part of 3011,
+#####       which should be in 3017, by scaling the provided UHG ordinates
+#####       from 607 km2 to the reported 681 km2 (264 mi2)
+UNIT-HG     UH1-3017
+3017                           264.    7           ENGL     0.000
+  3017     INFW    6  3017LOC  SQIN    6
+    1627.5    6014.3    7546.3    6084.1    3849.4    2089.3    1020.2
+MEAN-Q      MQ1-3017LOC
+  3017LOC  SQIN    6  3017LOC  SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Total flow equals local flow minus the observed diversion
+#
+CHANGE-T    KHRM8
+  3017OBSD SQME   24  3017OBSD SQIN    6
+WEIGH-TS    WT1-SAVESIMULATEDTOTALNODIVERSION
+    2       3017TOT  SQIN    6
+3017LOC   SQIN      1.00
+3017OBSD  SQIN     -1.00
+#
+# Account for non-observed consumptive use
+#
+CHANLOSS    SFBM8
+ASSUMED LOSS         VARC
+3017TOT    SQIN    6
+     0.0       0.0       0.0       0.0       0.0       0.0
+     0.2       0.3       0.3       0.2       0.0       0.0
+MEAN-Q      MQ2-3017TOT
+  3017TOT  SQIN    6  3017TOT  SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  3017DIV  SQIN   6
+WEIGH-TS    WT2-ACTUALDIVERSION
+    2       3017DIV  SQIN    6
+3017LOC   SQIN      1.00
+3017TOT   SQIN     -1.00
+MEAN-Q      MQ3-ESTIMATEDDIVERSION
+  3017DIV  SQIN    6  3017DIV  SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-3017
+3017                   0    1    0
+3017       QME   24
+3017TOT    SQIN   6
+3017TOT    QINE   6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT3-LOCALNATURAL
+    3       3017NAT  QME    24
+3017      QME       1.00
+3017DIV   SQME      1.00
+3017OBSD  SQME      1.00
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Natural Local Flows
+#
+WY-PLOT     WY1-LOCALNATURAL
+3017                    3 SLOG      681.   25  YES
+  3017NAT  QME        OBSERVEDNAT     n
+  3017LOC  SQME       SIMULATEDLOC    s
+  3017OBSD SQME       OBSERVEDDIV     d
+  3017     RAIM    6            3017                3017     SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             681.    3017LOC  SQME   24  3017NAT  QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTAL
+3017                    2 SLOG      681.   25  YES
+  3017     QME         OBSERVED        o
+  3017TOT  SQME        SIMULATED       s
+  3017     RAIM    6            3017                3017     SMZC
+STAT-QME    TOTAL         
+LOCAL FLOWS             681.    3017TOT  SQME   24  3017     QME    24
+STOP

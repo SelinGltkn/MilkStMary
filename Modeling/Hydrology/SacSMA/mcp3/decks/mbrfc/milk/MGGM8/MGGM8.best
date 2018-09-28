@@ -1,0 +1,194 @@
+MGGM8  Swiftcurrent Ck at Many Glacier
+   10 1978    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+MGGM8UP    MAP     6            INPUT
+MAP/mggm8upr.MAP06
+MGGM8UP    MAT     6            INPUT
+MAT/mggm8upr.MAT.adjusted
+MGGM8UP    SASC    6
+MGGM8UP    SWE     6            OUTPUT
+SWE/MGGM8.UP.SWE                                                       (6F10.2)
+MGGM8UP    RAIM    6
+MGGM8UP    INFW    6
+MGGM8UP    ROCL   24
+MGGM8UP    SMZC   24
+MGGM8UP    SQIN    6
+MGGM8UP    SQME   24
+MGGM8LO    MAP     6            INPUT
+MAP/mggm8lwr.MAP06
+MGGM8LO    MAT     6            INPUT
+MAT/mggm8lwr.MAT.adjusted
+MGGM8LO    SASC    6
+MGGM8LO    SWE     6
+MGGM8LO    RAIM    6
+MGGM8LO    INFW    6
+MGGM8LO    ROCL   24
+MGGM8LO    SMZC   24
+MGGM8LO    SQIN    6
+MGGM8LO    SQME   24
+3001       RAIM    6
+3001       INFW    6
+3001       ROCL   24
+3001       SMZC   24
+# ----- Regulation Modeling -------------------------
+# No local irrigation reported
+# ----- Upstream Return Flows -----------------------
+# None (Headwater without trans-basin diversions)
+# ----- Observed Streamflow Observations ------------
+MGGM8      QME    24            INPUT
+TotQME/MGGM8.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# None 
+# ----- Sum of Routed Flows -------------------------
+# Headwater
+# ----- Computed Local Natural Flows ----------------
+# Same as observed (No irrigation modelled)
+# ----- Simulated Local Natural Flows ---------------
+# Same as total (No irrigation modelled)
+# ----- Simulated Total Observed Flows --------------
+MGGM8      SQIN    6
+MGGM8      SQME   24            OUTPUT
+NatSQME/MGGM8.LOC.NAT.SQME                                             (6F10.2)
+MGGM8      QINE    6            OUTPUT
+TotQINE/MGGM8.TOT.QINE                                                 (6F10.2)
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-UPR
+UP MGGM8 ABV 6000ft 2139. 41.0            YES SUMS           RDCO
+    6  MGGM8UP  MAP      1.200       MGGM8UP  RAIM
+  MGGM8UP  MAT     6     2239.  0.6  0.6
+  MGGM8UP  SWE     6            MGGM8UP  SASC    6
+ 1.25 1.000.2000.1009999.    0
+0.1500.1000.000 2.000.0200.400
+  .08  .13  .20  .31  .49  .67  .79  .87  .94
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+UP MGGM8 ABV 6000ft          6  MGGM8UP  RAIM       MGGM8UP  INFW
+  MGGM8UP  SASC    6  MGGM8UP   MGGM8UP  SUMS                FRZE
+                    1.0001.000 20.0 45.00.4000.0100.0000.000    0 .170
+                     55.0 2.50 70.0 125. 200.0.0600.0050.350 .300  .00
+                    0.430.470.921.872.943.213.423.292.190.910.440.40 
+                     20.0  1.0  70. 14.0  88.  80.    0
+  MGGM8UP  MAT     6                 MGGM8UP  SWE     6
+0.1000.0800.120 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+SNOW-17     SN2-LWR
+LO MGGM8 BLW 6000ft 1645. 41.0            YES SUMS           RDCO
+    6  MGGM8LO  MAP      1.200       MGGM8LO  RAIM
+  MGGM8LO  MAT     6     2045.  0.6  0.6
+  MGGM8LO  SWE     6            MGGM8LO  SASC    6
+ 1.30 1.200.4000.100 900.    0
+0.1500.1000.000 2.000.0200.400
+  .31  .52  .70  .79  .84  .89  .92  .95  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC2-LWR
+LO MGGM8 BLW 6000ft          6  MGGM8LO  RAIM       MGGM8LO  INFW
+  MGGM8LO  SASC    6  MGGM8LO   MGGM8LO  SUMS                FRZE
+                    1.0001.000 20.0 45.00.4000.0100.0000.000    0 .410
+                     55.0 2.50 70.0 125. 200.0.0600.0050.350 .300  .00
+                    0.430.470.922.173.443.914.023.892.591.110.440.40 
+                     20.0  1.0  70. 12.0  83.  80.    0
+  MGGM8LO  MAT     6                 MGGM8LO  SWE     6
+0.1000.0800.120 0.00 -3.00.050 10.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+# Weighting of the Elevation Zones
+#
+WEIGH-TS    WE1
+    2       3001     RAIM    6
+MGGM8UP   RAIM       0.65
+MGGM8LO   RAIM       0.35
+WEIGH-TS    WE2
+    2       3001     INFW    6
+MGGM8UP   INFW       0.65
+MGGM8LO   INFW       0.35
+WEIGH-TS    WE3
+    2       3001     ROCL   24
+MGGM8UP   ROCL       0.65
+MGGM8LO   ROCL       0.35
+WEIGH-TS    WE4
+    2       3001     SMZC   24
+MGGM8UP   SMZC       0.65
+MGGM8LO   SMZC       0.35
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH-TOTAL
+MGGM8                          30.6    2           ENGL     0.000
+  3001     INFW    6  MGGM8    SQIN    6
+   3101.83    189.37
+MEAN-Q      MQ1-3001 
+  MGGM8    SQIN    6  MGGM8    SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-MGGM8
+MGGM8                   0    1    0
+MGGM8      QME    24
+MGGM8      SQIN    6
+MGGM8      QINE    6
+    4     0.025
+#
+# --------------- Natural Flow Calculation -----------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER WITHOUT DIVERSIONS: NOT APPLICABLE
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY2-LOCALNATURAL
+MGGM8                   2 SLOG       79.   65  YES
+  MGGM8    QME         OBSERVEDNAT     n
+  MGGM8    SQME        SIMULATEDLOC    s
+  3001     RAIM    6            3001                3001     SMZC
+STAT-QME    ST1-LOCALNATURAL
+LOCAL FLOWS              79.    MGGM8    SQME   24  MGGM8    QME    24
+#
+# Additional Natural Local Flows: Plotting of Elevation Zone Components
+#
+WEIGH-TS    WT2-UPPER
+    1       MGGM8UP  INFW    6
+MGGM8UP   INFW      0.65
+UNIT-HG     UH2-MGGM8
+MGGM8                          30.6    2           ENGL     0.000
+  MGGM8UP  INFW    6  MGGM8UP  SQIN    6
+     2762.     529.2
+MEAN-Q      MQ2-MGGM8UP
+  MGGM8UP  SQIN    6  MGGM8UP  SQME   24
+WEIGH-TS    WT3-LOWER
+    1       MGGM8LO  INFW    6
+MGGM8LO   INFW      0.35
+UNIT-HG     UH3-MGGM8
+MGGM8                          30.6    2           ENGL     0.000
+  MGGM8LO  INFW    6  MGGM8LO  SQIN    6
+     2762.     529.2
+MEAN-Q      MQ3-MGGM8LO
+  MGGM8LO  SQIN    6  MGGM8LO  SQME   24
+WY-PLOT     WY3-COMPONENTS
+MGGM8                   4 SLOG      79.3   50  YES
+  MGGM8    QME         OBSERVEDTOT     n
+  MGGM8    SQME        SIMULATEDLOC    s
+  MGGM8UP  SQME        UPPER_PORTION   u
+  MGGM8LO  SQME        LOWER_PORTION   l
+  MGGM8UP  RAIM    6            MGGM8UP             MGGM8UP  SMZC
+PEAKFLOW   MGGM8
+instantaneous         05014500  MGGM8    SQIN
+    6    2    0    0    MGGM8.OBS.PEAK
+STOP

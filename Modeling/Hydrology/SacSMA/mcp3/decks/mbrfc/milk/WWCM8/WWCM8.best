@@ -1,0 +1,144 @@
+3051   Whitewater Creek nr Intl Bndry
+   10 1948    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+3051       MAP     6            INPUT
+MAP/3051.MAP06
+3051       MAT     6            INPUT
+MAT/3051.MAT
+3051       SASC    6
+3051       SWE     6
+3051       RAIM    6
+3051       INFW    6
+3051       ROCL   24
+3051       SMZC   24
+# ----- Observed Streamflow Observations ------------
+3051       QME    24            INPUT
+TotQME/3051.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+3051DIV    SQIN    6
+3051DIV    SQME   24
+# ----- Sum of Routed Flows -------------------------
+# Headwater
+# ----- Computed Local Natural Flows ----------------
+3051NAT    QME    24            OUTPUT
+NatQME/3051.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+3051LOC    SQIN    6
+3051LOC    SQME   24
+# ----- Simulated Total Observed Flows --------------
+3051TOT    SQIN    6
+3051TOT    SQME   24
+3051TOT    QINE    6            OUTPUT
+TotQINE/WWCM8.TOT.QINE
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modelling
+#
+SNOW-17     SN1-UPR
+3051                 911.  45.            YES SUMS           RDCO
+    6  3051     MAP      1.000       3051     RAIM
+  3051     MAT     6      911.  0.6  0.6
+  3051     SWE     6            3051     SASC    6
+ 1.05 1.100.2000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .17  .29  .42  .57  .69  .77  .83  .88  .93
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+3051                         6  3051     RAIM       3051     INFW
+  3051     SASC    6  3051      3051     SUMS                FRZE
+                    1.0001.000110.0 60.00.2800.0030.0000.005    0  .01
+                     20.0 2.00 180. 30.0 80.00.0800.0020.200 .300  .00
+                    0.410.621.212.523.824.665.284.783.111.720.750.45
+                       1.  0.0   1.  0.0   1.   1.    0
+  3051     MAT     6                 3051     SWE     6
+0.1000.0800.050 0.00 -3.00.050  8.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3051
+3051                          1263.   12           ENGL     0.000
+  3051     INFW    6  3051LOC  SQIN    6
+    1423.5    8465.0   17090.8   22170.7   22570.6   19711.1   15485.9
+   11260.6    7716.6    5047.9    3179.0    1577.1
+MEAN-Q      MQ1-3051LOC 
+  3051LOC  SQIN    6  3051LOC  SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Total flow equals local flow
+#
+WEIGH-TS    WT1-SAVESIMULATEDTOTALNODIVERSION
+    1       3051TOT  SQIN    6
+3051LOC   SQIN      1.00
+#
+# Account for consumptive use
+#
+CHANLOSS    3051 
+ASSUMED LOSS         VARP
+3051TOT    SQIN    6
+     0.0       0.0       0.0       0.5       0.9      0.9
+     0.9       1.0      0.95       0.75      0.35      0.0
+MEAN-Q      MQ2-3051TOT 
+  3051TOT  SQIN    6  3051TOT  SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  3051DIV  SQIN   6
+WEIGH-TS    WT2-ACTUALDIVERSION
+    2       3051DIV  SQIN    6
+3051LOC   SQIN      1.00
+3051TOT   SQIN     -1.00
+MEAN-Q      MQ3-ESTIMATEDDIVERSION
+  3051DIV  SQIN    6  3051DIV  SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-3051
+3051                   0    1    0
+3051       QME   24
+3051TOT    SQIN   6
+3051TOT    QINE   6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT3-LOCALNATURAL
+    2       3051NAT  QME    24
+3051      QME       1.00
+3051DIV   SQME      1.00
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY1-LOCALNATURAL
+3051                    2 SLOG     3272.   25  YES
+  3051NAT  QME        OBSERVEDNAT     n
+  3051LOC  SQME       SIMULATEDLOC    s
+  3051     RAIM    6            3051                3051     SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS            3272.    3051LOC  SQME   24  3051NAT  QME    24
+WY-PLOT     WY2-LOCALOBSERVED
+3051                    2 SLOG     3272.   25  YES
+  3051     QME        OBSERVEDNAT     n
+  3051TOT  SQME       SIMULATEDLOC    s
+  3051     RAIM    6            3051                3051     SMZC
+STAT-QME    LOCALOBSERVED
+LOCAL FLOWS            3272.    3051TOT  SQME   24  3051     QME    24
+STOP

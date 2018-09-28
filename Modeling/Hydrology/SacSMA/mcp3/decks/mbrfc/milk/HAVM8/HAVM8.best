@@ -1,0 +1,446 @@
+HAVM8  Milk River at Eastern Crossing of Intl Bdry
+   10 1985    9 2003
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+3028       MAP     6            INPUT
+MAP/3028.MAP06
+3028       MAT     6            INPUT
+MAT/3028.MAT
+3028       SASC    6
+3028       SWE     6
+3028       RAIM    6
+3028       ROCL   24
+3028       SMZC   24
+3028       INFW    6
+# ----- Regulation Modeling -------------------------
+# Local diversions for 3.7 sqkm irrigation in the US,
+# no irrigation reported for the
+# Canadian part
+#!!NOTE: The original calibration relied on a CHANLOSS
+#        to correct the bias
+# Unlimited supply (used during calibration)
+UNLIMITD   SQME   24
+# 14-day average MAT calculations
+MAT        INFW    6
+AVGMAT     SQIN    6
+AVGMAT     MAT     6
+# Diversion computed by the consumptive use model
+CUDIV      SQME   24           
+CUDIV      SQIN    6 
+# CU model time series
+REMAIN     SQME   24
+RFIN       SQME   24
+RFOUT      SQME   24
+RFOUT      SQIN    6
+OTHLOSS    SQME   24
+CROPDMD    SQME   24            
+CROPET     MAPE   24
+# 21-day MAP sum
+SUMMAP     SQIN    6
+# Diversion scaling factor
+PERCENT    DFAC    6
+PERCENT    SQIN    6
+DEMAND     SQME   24
+# Diversion reduced in high precip periods
+PCPNDIV    SQIN    6            INTERNAL
+PCPNDIV    SQME   24            INTERNAL           
+DEMAND     SQIN    6                       
+JULDATE    SQIN    6            
+CUTOFF     DFAC    6
+# Final supply-unlimited diversion
+DEMAND2    SQME   24           
+DEMAND2    SQIN    6
+# Diversion with clipped start/end 
+CLIPDDIV   SQME   24            INTERNAL
+# Minimum flow
+# Not used
+# Available to divert
+AVAIL      SQIN    6            INTERNAL
+AVAIL      SQME   24            INTERNAL
+# Excess diversion
+ABVLIM     SQIN    6            INTERNAL
+# Final supply limited diversion
+HAVM8DIV   SQIN    6            INTERNAL
+HAVM8DIV   SQME   24            INTERNAL
+# Return flow
+DIVLOSS    SQIN    6            INTERNAL
+HAVM8RET   SQIN    6            OUTPUT
+ReturnFlows/HAVM8_HAVM8_RET.SQIN                                       (6F10.2)
+HAVM8RET   SQME   24            INTERNAL
+# ----- Upstream Return Flows -----------------------
+# None currently, but possible from ERNM8
+# ----- Observed Streamflow Observations ------------
+HAVM8      RQIM   24            INPUT
+TotQME/HAVM8.COMP.RQIM
+HAVM8      RQIN    6
+ERNM8      SQIN    6            INPUT
+TotQINE/ERNM8.TOT.QINE
+ERNM8RTD   SQIN    6
+# ---- St. Mary's Canal -----------------------------
+SCCM8      SQIN    6            INPUT
+TotQINE/SCCM8.ERNM8.SQIN
+# St. Mary's Canal flows routed to Fresno Reservoir
+SCCM8RTD   SQIN    6
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# Currently not modelled
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6
+ROUTED     SQME   24
+# ----- Computed Local Natural Flows ----------------
+3028       QIN     6
+3028       QME    24            OUTPUT
+NatQME/HAVM8.LOC.NAT.QME                                               (6F10.2)
+# ----- Simulated Local Natural Flows ---------------
+3028       SQIN    6
+3028       SQME   24            OUTPUT
+NatSQME/HAVM8.LOC.NAT.SQME                                             (6F10.2)
+# ----- Simulated Total Observed Flows --------------
+HAVM8      SQIN    6
+HAVM8      SQME   24            OUTPUT
+TotSQME/HAVM8.TOT.SQME                                                 (6F10.2)
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    HAVM8
+  HAVM8    RQIM   24  HAVM8    RQIN    6
+#
+## Route the upstream flow (simulated adjusted to observed)
+#
+LAG/K       LK1-HAVM8
+ERNM8    SQIN  6 ERNM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+     48.0   50  18.0   500
+     12.0   50   3.0   500
+           0
+#
+## Use chanloss to improve flows in the winter
+#
+CHANLOSS    HAVM8
+ASSUMED LOSS         VARC
+ERNM8RTD   SQIN    6
+     1.4       0.0       0.0       0.0       0.0       0.0
+     0.0       0.0       0.0       0.0       1.4       1.6
+#
+## Compute routed flow
+#
+WEIGH-TS    WT1-ROUTED
+    1       ROUTED   SQIN    6
+ERNM8RTD  SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-3028      
+3028                 863.  41.            YES SUMS           RDCO
+    6  3028     MAP      1.000       3028     RAIM
+  3028     MAT     6      863.  0.0  0.0
+  3028     SWE     6            3028     SASC    6
+ 1.25 1.000.3000.1009999.    0
+0.1500.2000.000 1.000.0500.200
+  .34  .54  .68  .78  .85  .89  .93  .96  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3028    
+3028                         6  3028     RAIM       3028     INFW
+  3028     SASC    6  3028      3028     SUMS                FRZE
+                    1.0001.000 60.0 50.0  0.3 0.04  0.0 0.03    0  .00
+                     70.0  2.0 150. 50.0 100. 0.060.005  0.3 .300  0.0
+                     0.5 0.71.292.583.964.895.655.073.341.96 0.9 0.5
+                      5.0  0.0  20.  0.0  10.  25.    0
+  3028     MAT     6                 3028     SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3028 
+3028                          661.0   10           ENGL     0.000
+  3028     INFW    6  3028     SQIN    6
+    1138.0    6173.0   11362.0   13437.0   12470.0    9928.0    7110.0
+    4713.0    2945.0    1756.0
+MEAN-Q      MQ4-3028
+  3028     SQIN    6  3028     SQME   24
+#
+# ---------------  Regulation Modeling ---------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Use CONS_USE model and adjustments to model the diversions. 
+#
+## Create an unlimited supply 
+#
+SET-TS      UNLIMITD
+  UNLIMITD SQME   24   99999999.0
+#
+## Take 7-day average MAT for input into CONS_USE model instead of 6-hour 
+## MAT. 
+#
+LOOKUP      AVG_MAT1
+    2    0
+3028      MAT      6
+MAT       INFW     6
+      -500.0      -500.0       500.0       500.0 
+UNIT-HG     AVG_MAT2
+AVERAGE MAT OVER 7 DAYS       0.0093  28           ENGL     0.000
+  MAT      INFW    6  AVGMAT   SQIN    6
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+LOOKUP      AVG_MAT3
+    2    0
+AVGMAT    SQIN     6
+AVGMAT    MAT      6
+      -500.0      -500.0       500.0       500.0 
+#
+## Consumptive Use Model (return flows turned off)
+## for the irrigation of ungaged lands The areas of 40 sqkm
+## was determined during calibration from observed data.
+#
+CONS_USE    HAVM8   
+HAVM8    CONSUMPTIVE USE
+0
+AVGMAT MAT  UNLIMITD SQME
+REMAIN SQME CUDIV SQME
+RFIN SQME RFOUT SQME OTHLOSS SQME CROPDMD SQME CROPET MAPE
+ 48.0  40.  0.40 0.0
+0.00 0.00 0.00 0.30 0.50 0.50
+0.60 0.60 0.50 0.20 0.10 0.00
+    0.00     0.00     0.00
+CHANGE-T    CT2-CUDIV
+  CUDIV    SQME   24  CUDIV    SQIN    6
+#
+## Compute moving sum of RAIM 
+#
+UNIT-HG     SUMMAP
+SUM RAIM OVER 21 DAYS         0.5208  84           ENGL     0.000
+  3028     RAIM    6  SUMMAP   SQIN    6
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+#
+## Create a scaling time series, representing a fraction of the originally
+## computed diversion that will be diverted. 
+## A reduction of diversions based on area wetness is currently not
+## employed. The opration is left in the deck for consistency.
+#
+LOOKUP      MAPPRCNT 
+    7    0
+SUMMAP    SQIN     6
+PERCENT   DFAC     6
+         0.0         1.0         0.5         1.0         1.0         1.0
+         2.0         1.0         4.9         1.0         5.0         1.0      
+      1000.0         1.0
+#
+## Multiply the scaling factor times the diversion to reduce the diversion
+## in wet periods
+#
+MULT/DIV    MAPPRCNT
+  CUDIV    SQIN    6  PERCENT  DFAC    6
+  PCPNDIV  SQIN   1
+#
+## Use CHANLOSS, LOOKUP, and MULT/DIV to set the start and end dates for 
+## the demand
+#
+SET-TS      JULIAN  
+  JULDATE  SQIN    6          0.0
+CHANLOSS    JULIAN 
+CREATE JULIAN DATE   VARC
+JULDATE    SQIN    6
+      -15.      -46.      -74.     -105.     -135.     -166.
+     -196.     -227.     -258.     -288.     -319.     -349.
+LOOKUP      DATECUT
+    4   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+         91.         0.0        105.         1.0        305.         1.0
+        319.         0.0  
+MULT/DIV    DATECUT
+  PCPNDIV  SQIN    6  CUTOFF   DFAC    6
+  HAVM8DIV SQIN   1
+MEAN-Q      CLIPPED
+  HAVM8DIV SQIN    6  CLIPDDIV SQME   24
+#
+## Compute flow available to divert (supply limitation)
+## Are subtracting St. Mary's Canal from available flow, as the local
+## irrigators do not have rights to that water
+## First, route the St. Mary canal flows to the outlet - use the same
+## LAG/K parameters as for the total ERNM8 flows
+#
+LAG/K       LK2-SCCM8RTD
+SCCM8    SQIN  6 SCCM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+     48.0   50  18.0   500
+     12.0   50   3.0   500 
+           0  
+#
+## Then compute the total legally AVAILABLE flows at the outlet
+#
+WEIGH-TS    WT9-AVAILABLETODIVERT
+    3       AVAIL    SQIN    6
+3028      SQIN       1.00
+ROUTED    SQIN       1.00
+SCCM8RTD  SQIN      -0.90
+#
+## Take minimum of flow available and diversion
+#
+ADD/SUB     ABVLIM1
+  ABVLIM   SQIN    6  HAVM8DIV SQIN    6  ADD 
+ADD/SUB     ABVLIM2
+  ABVLIM   SQIN    6  AVAIL    SQIN    6  SUB 
+ADD/SUB     ABVLIM3
+  HAVM8DIV SQIN    6  ABVLIM   SQIN    6  SUB
+MEAN-Q      HAVM8   DIV
+  HAVM8DIV SQIN    6  HAVM8DIV SQME   24
+#
+## Compute return flows (30% of diversions)
+## These will be applied in the irrigated areas
+#
+WEIGH-TS    RETURN
+    1       HAVM8RET SQIN    6
+HAVM8DIV  SQIN       0.10
+#
+## Attenuate the local return flows
+##(Equivalent recession coefficient = 0.04)
+#
+LAG/K       LOCALRETURN 
+HAVM8RET SQIN  6 HAVM8RET SQIN  6     0     0 ENGL    0         0
+        0.
+     4800.
+         0
+MEAN-Q      HAVM8RET
+  HAVM8RET SQIN    6  HAVM8RET SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#CHANLOSS    HAVM8
+#ASSUMED LOSS         VARC
+#ERNM8RTD   SQIN    6
+#     0.8       0.3       0.3       0.3       1.3       1.3
+#     1.3       0.8       0.8       0.8       0.8       0.8
+#&& Replaced by modeling end
+#
+## Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    4       HAVM8    SQIN    6
+3028      SQIN       1.00
+ROUTED    SQIN       1.00
+HAVM8DIV  SQIN      -1.00
+HAVM8RET  SQIN       1.00
+MEAN-Q      MQ5-HAVM8   
+  HAVM8    SQIN    6  HAVM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+## Not necessary, downstream observations are reservoir inflows
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    4       3028     QIN     6
+HAVM8     RQIN       1.00
+ERNM8RTD  SQIN      -1.00
+HAVM8DIV  SQIN       1.00
+HAVM8RET  SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  3028     QIN     6  3028     QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT-HAVM8
+COMPARE LAG TO INST          3    1    4
+ ARIT   40         0       200    4           #--Routed flows
+  HAVM8    RQIN    6        DOWNSTR         d    # Observed total 
+  HAVM8    SQIN    6        TOTALSIM        t    # Simulated total
+  ERNM8    SQIN    6        UPSTR           n    # ERNM8 upstream 
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed  
+STAT-QME    LAG
+LAG ANALYSIS-HAVM8      9999.9  ROUTED   SQME   24  HAVM8    RQIM   24
+#
+## Diversions and Returns
+#
+PLOT-TS     TOT&DIV 
+SIMULATED DIVERSIONS         3    5   11    0
+ ARIT   20         0        20    3           #--Total flow 
+  HAVM8    RQIN    6        DOWNSTR         d    # Observed total
+  HAVM8    SQIN    6        TOTALSIM        t    # Simulated total
+  AVAIL    SQIN    6        AVAILABLE       a    # Flow available to divert   
+ ARIT   20         0         5    3           #--Total flow components
+  AVAIL    SQIN    6        AVAILABLE       a    # Flow available to divert   
+  HAVM8RET SQIN    6        RETURN          r    # Return flows
+  HAVM8DIV SQIN    6        HAVM8DIV        s    # Simulated irrigation diversion (subtract)
+ ARIT   20         0         5    3            #--Irrigation diversion
+  HAVM8DIV SQIN    6        SIMDIV          s    # Simulated irrig diversion
+  AVAIL    SQIN    6        AVAILABLE       a    # Flow available to divert                                                                                                                                                                                                                                                                           
+  CUDIV    SQIN    6        UNLIMITED       u    # CU diversion (unlimited by precip, available flow)                                                                                                                                                                                                                                                 
+ ARIT   20         0       0.2    1            #--Sum of RAIM
+  SUMMAP   SQIN    6        MAP             m
+ ARIT   20         0         1    1            #--Percent reduction for precip
+  PERCENT  DFAC    6        REDUCTION       r
+#
+#  MINFLOW  SQIN    6        MINFLOW         m    # Minimum flow 
+#
+## Ungaged Diversions
+#
+PLOT-TS     UNGAGED DIV 
+SIMULATED DIVERSIONS         3    2    5    0
+ ARIT   20         0        40    4           #--Total flow 
+  HAVM8    RQIN    6        DOWNSTR         d    # Observed total
+  HAVM8    SQIN    6        TOTALSIM        t    # Simulated total
+  HAVM8DIV SQIN    6        HAVM8DIV        s    # Simulated irrigation diversion (subtract)
+  HAVM8RET SQIN    6        RETURN          r    # Return flows                                                                                                                                                                                                                                            
+ ARIT   20         0       0.2    1            #--Sum of RAIM
+  SUMMAP   SQIN    6        MAP             m
+#
+#  PERCENT  DFAC    6        REDUCTION       r
+#  SUMMAP   SQIN    6        MAP             m
+#  AVAIL    SQIN    6        AVAILABLE       a    # Flow available to divert   
+#  MINFLOW  SQIN    6        MINFLOW         m    # Minimum flow 
+#
+## Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+HAVM8                   2 SLOG     1711.  100  YES
+  3028     QME         OBSRVD_NAT      o
+  3028     SQME        HAVM8_LOC       l
+  3028     RAIM    6            3028                3028     SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS            1711.    3028     SQME   24  3028     QME    24
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+HAVM8                   4 SLOG     7322.   50  YES
+  HAVM8    RQIM        OBSRVD_TOT      o
+  HAVM8    SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  3028     SQME        HAVM8_LOC       l
+  3028     RAIM    6            3028                3028     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS            7322.    HAVM8    SQME   24  HAVM8    RQIM   24 1
+                           0.10 0.50 1.00 5.00 20.0 40.0
+#STAT-QME    ST4-TOTALOBSERVED
+#TOTAL FLOWSBR          7322.    HAVM8    SQME   24  HAVM8BR  RQIM   24
+STOP

@@ -1,0 +1,231 @@
+FRESNO RESERVOIR                                                         
+    6 1992   10 2003  ENGL
+DEF-TS
+HAVINPOS   RQIM   24            INPUT         CARD
+RQIM/HAV.RQIM24 
+HAVINCAL   RQIN    6            INPUT
+RQIN/HAVInPos.RQIN06
+HAV        PELV   24            INPUT         CARD
+PELV/HAV.PELV24
+HAV        PELV    6
+HAV        RQME   24            INPUT         CARD
+RQME/HAVTot.RQME24
+HAV        RQOT    6
+HAVSIMRL   SQIN    6            INTERNAL
+HAVSIMRL   SQME   24
+HAVORELS   RQOT    6
+HAVSIMEL   SPEL    6
+HAVINPOS   RQIN    6
+HAV        SQIN    6
+DEMAND     DQIN    6            INPUT
+DEMAND/HAV.DEMAND.SQIN
+END
+CHANGE-T    POOL  
+  HAV      PELV   24  HAV      PELV    6
+CHANGE-T    OUTFLOW 
+  HAV      RQME   24  HAV      RQOT    6
+CHANGE-T    INFLOW 
+  HAVINPOS RQIM   24  HAVINPOS RQIN    6
+RES-J       FRESNO                                              #{
+
+
+ ################################################################{
+ TIMESERIES
+  TIMESTEP        06
+
+  ###### ######## #### ## ############
+  INPUT  HAVINCAL RQIN 06 HAV_INFLOW   #COMPUTED INFLOWS
+  INPUT  HAV      PELV 06 HAV_OBS_POOL #OBSERVED POOL ELEVATION
+  INPUT  HAV      RQOT 06 HAV_OBS_OUTF #OBSERVED TOTAL OUTFLOW
+  INPUT  DEMAND   DQIN 06 TOTAL_DEMAND
+  OUTPUT HAVSIMRL SQIN 06 HAV_SIM_REL  #SIMULATED RELEASE
+  OUTPUT HAVSIMEL SPEL 06 HAV_SIM_POOL #SIMULATED POOL ELEVATION
+ ENDTIMESERIES
+ ################################################################}
+
+ ################################################################{
+ TOPOLOGY
+  RESERVOIR  FRESNO   
+ ENDTOPOLOGY
+ ################################################################}
+
+ ################################################################{
+ PARAMETERS
+  UNITS ENGLISH
+
+  ############ ############ ############{
+  # Begin Fresno Parameters
+  ############ ############ ############{
+  RESERVOIR    FRESNO   
+   TSINPUT  inflow  HAV_INFLOW  
+   TSOUTPUT release HAV_SIM_REL
+   TSOUTPUT pool    HAV_SIM_POOL
+   TABLE   ELEV_STOR
+    2525.0         0.0
+    2526.0        18.0
+    2528.0       161.0
+    2530.0       448.0
+    2532.0      1016.0
+    2534.0      2005.0
+    2536.0      3402.0
+    2538.0      5124.0
+    2540.0      7160.0
+    2542.0      9473.0
+    2544.0     12029.0
+    2546.0     14827.0
+    2548.0     17866.0
+    2550.0     21148.0
+    2552.0     24670.0
+    2554.0     28432.0
+    2556.0     32438.0
+    2558.0     36712.0
+    2560.0     41260.0
+    2562.0     46147.0
+    2564.0     51441.0
+    2566.0     57191.0
+    2568.0     63703.0
+    2570.0     71025.0
+    2572.0     79159.0
+    2574.0     88103.0
+    2576.0     97883.0
+    2578.0    108641.0
+    2580.0    120400.0
+    2582.0    133167.0
+    2584.0    146947.0
+    2586.0    161712.0
+    2588.0    177283.0
+    2590.0    193633.0
+   ENDTABLE 
+   MINPOOL          2525.0
+   MINRELEASE         20.0
+   INITIALPOOL      2554.13   
+   INITIALRELEASE    100.0        
+   INITIALINFLOW    1369.0    
+  ENDRESERVOIR
+  ############ ############ ############}
+
+  #*************BEGIN METHOD DEFINITION************************
+
+  ############ ############ ############{
+  SETELEVATION FRESNO       UPPER  
+   VALUES
+    01/01   2540.0
+    04/01   2550.0
+    06/01   2550.0
+    08/01   2540.0
+    09/01   2550.0
+    10/01   2555.0
+    12/31   2540.0
+   ENDVALUES
+   INTERPOLATE ALL
+  ENDSETELEVATION UPPER
+  ############ ############ ############}
+
+  ############ ############ ############{
+  SETRELEASE   FRESNO       DEMAND
+   TSINPUT  OBSERVEDRELEASE  TOTAL_DEMAND
+   VALUES
+   ELEV   2525   2545  2575  2585  2590  ENDELEV
+    01/01    0     30    40   150 15000
+    03/01    0     30    40  1000 15000
+    06/01    0     30    40  1000 15000
+    10/01    0     30    40  1000 15000
+    10/31    0     30    40   150 15000
+    12/31    0     30    40   150 15000
+   ENDVALUES
+   INTERPOLATE ALL
+  ENDSETRELEASE
+  ############ ############ ############}
+
+  ############ ############ ############{
+  SETRELEASE   FRESNO       MINFLOW
+   VALUES
+   ELEV   2525   2545  2575  2578  2590  ENDELEV
+    01/01    0     20    40   150   300
+    12/31    0     20    40   150   300
+   ENDVALUES
+   INTERPOLATE ALL
+  ENDSETRELEASE
+  ############ ############ ############}
+
+  ############ ############ ############{
+  SETMIN       FRESNO       NORMAL
+   SETRELEASE   FRESNO       DEMAND
+   SETELEVATION FRESNO       UPPER
+  ENDSETMIN
+  ############ ############ ############}
+
+  ############ ############ ############{
+  SPILLWAY     FRESNO       FREE
+    TABLE  ELEV_SPILL
+       2575.0    0
+       2575.5    500
+       2576.0    1000
+       2577.0    2000
+       2578.0    4000
+       2579.0    7500
+     ENDTABLE
+    INTERVALS 12 
+    INITIALSPILL 0.0
+  ENDSPILLWAY
+  ############ ############ ############}
+
+  ############ ############ ############{
+  ADJUST       FRESNO       ADJ_POOL
+   TSINPUT ObservedPool HAV_OBS_POOL
+   ADJSIM OFF
+  ENDADJUST
+  ############ ############ ############}
+  # End Fresno Parameters
+  ############ ############ ############}
+
+
+#*************END METHOD DEFINITION************************
+
+ ENDPARAMETERS
+ ################################################################}
+
+ ################################################################{
+ RULES
+
+  [TRUE]
+
+      ############ ############ ############
+      ::SETMIN       FRESNO      NORMAL
+           #SETRELEASE   FRESNO      DEMAND
+           #SETELEVATION FRESNO      UPPER
+
+  [ DATE > 08/02 && \
+    FRESNO.PREVIOUSINFLOW < 200 && \
+    FRESNO.STARTINGINFLOW < 200 && \
+    FRESNO.ENDINGINFLOW < 200 && \
+    FRESNO.STARTINGRELEASE < 200 ]
+      ############ ############ ############
+    ::SETRELEASE   FRESNO       MINFLOW
+
+  [TRUE]
+      ############ ############ ############
+    ::SPILLWAY     FRESNO       FREE
+
+#    ::ADJUST       FRESNO       ADJ_POOL
+
+ ENDRULES
+ ################################################################}
+ENDRES-J                                                        #}
+PLOT-TS    PLOT_PAN
+     HAV OUT_IN_WD_EL        3    2    7    0
+ ARIT            0.0     84.95    5
+  HAV      RQOT    6        HAV_OBSRLS      O
+  HAVSIMRL SQIN    6        HAV_SIMRLS      S
+  HAVINPOS RQIN    6        HAV_INFLOW      B
+  HAVINCAL RQIN    6        HAV_CALC        C
+  DEMAND   DQIN    6        HAV_DEMAND      D
+ ARIT          768.1     786.4    2
+  HAV      PELV    6        OBS_HAV_POOL    O
+  HAVSIMEL SPEL    6        SIM_HAV_POOL    S 
+MEAN-Q      SIMRL     
+  HAVSIMRL SQIN    6  HAVSIMRL SQME   24 
+STAT-QME    FRESNO    #---- Compare sim'd outflow to observed outflow
+SIM_SCS    OBS_HAV    10000.    HAVSIMRL SQME   24  HAV      RQME   24 1
+                           1.00 5.00 10.0 15.0 20.0 34.0
+STOP

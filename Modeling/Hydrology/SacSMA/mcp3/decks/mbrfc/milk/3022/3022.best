@@ -1,0 +1,311 @@
+3022   Frenchman River Near Hinsdale  
+   10 1980    9 2004
+#   10 1980    9 2004   Simulation to make data available downstream
+#   10 1964    9 1995  Evaluation Period
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+3022       MAP     6            INPUT
+MAP/3022.MAP06
+3022       MAT     6            INPUT
+MAT/3022.MAT
+3022       SASC    6
+3022       SWE     6
+3022       RAIM    6
+3022       ROCL   24
+3022       SMZC   24
+3022       INFW    6
+# ----- Regulation Modeling -------------------------
+# Local diversions for 1.1 sqkm irrigation ignored for now
+# For the diversions into the 
+#   Frenchman Canal (unknown served area)
+# Minimum flow
+MINFLOW    SQIN    6            INTERNAL
+# Available to divert
+AVAIL      SQIN    6            INTERNAL
+AVAIL      SQME   24            INTERNAL
+# Excess diversion
+ABVLIM     SQIN    6            INTERNAL
+# Final diversion
+3022DIV    SQIN    6            INTERNAL
+3022DIV    SQME   24            INTERNAL
+# Return flow
+ALLRETUR   SQIN    6            INTERNAL
+SACM8RET   SQIN    6            OUTPUT
+ReturnFlows/3022_SACM8.RET.SQIN                                        (6F10.2)
+HNDM8RET   SQIN    6            OUTPUT
+ReturnFlows/3022_HNDM8.RET.SQIN                                        (6F10.2)
+# ----- Upstream Return Flows -----------------------
+# None, reservoir upstream
+# ----- Observed Streamflow Observations ------------
+# Use simulated releases from Frenchman Reservoir
+FRDM8      SQIN    6            INPUT
+SQIN/FRDRES.SIM.SQIN
+FRDM8RTD   SQIN    6
+# ----- Gaged Diversions ----------------------------
+# Frenchman Canal - Data up to 1967
+3022OBSD   SQME   24            INPUT
+DQME/3022.OBS.DQME
+3022OBSD   SQIN    6
+# Average monthly flow time series for period after
+# 1967
+AVGFRC     SQIN    6
+AVGFRC     SQME   24
+# Demand for Frenchman Canal
+FRDDMD     SQIN    6            INPUT
+DEMAND/FRD.DEMAND.SQIN
+# ----- Un-Gaged Diversions -------------------------
+# Currently not modelled
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            INTERNAL
+ROUTED     SQME   24            INTERNAL
+# ----- Computed Local Natural Flows ----------------
+# Not available (no downstream observations)
+# ----- Simulated Local Natural Flows ---------------
+3022       SQIN    6
+3022       SQME   24            OUTPUT
+NatSQME/3022.LOC.NAT.SQME                                              (6F10.2)
+# ----- Simulated Total Observed Flows --------------
+3022TOT    SQIN    6            OUTPUT
+TotQINE/3022.TOT.SQIN                                                  (6F10.2)
+3022TOT    SQME   24            OUTPUT
+TotSQME/3022.TOT.SQME                                                  (6F10.2)
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Route the upstream flow (simulated adjusted to observed)
+#
+LAG/K       LK1-FRDM8
+FRDM8    SQIN  6 FRDM8RTD SQIN  6     2     2 ENGL 0.00       0.0
+       6   0    3   700
+       3   0    1   700
+           0
+#
+## Compute routed flow
+#
+WEIGH-TS    WT1-ROUTED
+    1       ROUTED   SQIN    6
+FRDM8RTD  SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-3022      
+3022                 769.  41.            YES SUMS           RDCO
+    6  3022     MAP      1.000       3022     RAIM
+  3022     MAT     6      769.  0.0  0.0
+  3022     SWE     6            3022     SASC    6
+ 1.00 1.100.2000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .23  .39  .55  .70  .82  .89  .94  .97  .99
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3022    
+3022                         6  3022     RAIM       3022     INFW
+  3022     SASC    6  3022      3022     SUMS                FRZE
+                    1.0001.000 40.0 60.00.2800.0000.0000.010    0  .00
+                     20.0 2.00 180. 30.0 80.00.0800.0020.200 .300  .00
+                    0.410.651.252.593.944.825.505.033.341.910.870.50
+                      5.0  0.0  20.  0.0  10.  25.    0
+  3022     MAT     6                 3022     SWE     6
+0.1000.0800.050 0.00 -3.00.000  8.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3022
+3022                           67.0    3           ENGL     0.000
+  3022     INFW    6  3022     SQIN    6
+    3116.8    3096.8    1044.5                                 
+MEAN-Q      MQ4-3022    
+  3022     SQIN    6  3022     SQME   24
+#
+# --------------- Regulation Modeling ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute the diversion into Frenchman Canal, use minimum of demand time
+## series and available flows at gage
+## For now, assume no minimum flows
+#
+## Set minimum flow requirement to limit diversions (based on calibration)
+## Note this only affects the amount diverted--no impact when diversion inactive
+#
+SET-TS      MINFLOW 
+  MINFLOW  SQIN    6          0.0
+CHANLOSS    MINFLOW
+MINIMUM FLOW         VARC                           0.0
+MINFLOW    SQIN    6
+     -0.10     -0.10     -0.10     -0.10     -0.10     -0.10
+     -0.10     -0.10     -0.10     -0.10     -0.10     -0.10
+#
+## Compute flow available to divert (supply limitation)
+#
+WEIGH-TS    WT9-AVAILABLETODIVERT
+    2       AVAIL    SQIN    6
+3022      SQIN       1.00
+ROUTED    SQIN       1.00
+ADD/SUB     MINFLOW
+  AVAIL    SQIN    6  MINFLOW  SQIN    6  SUB 
+#
+## Take minimum of flow available and diversion demand
+#
+ADD/SUB     DIVERSION
+  3022DIV  SQIN    6  FRDDMD   SQIN    6  ADD
+ADD/SUB     ABVLIM1
+  ABVLIM   SQIN    6  3022DIV  SQIN    6  ADD 
+ADD/SUB     ABVLIM2
+  ABVLIM   SQIN    6  AVAIL    SQIN    6  SUB 
+ADD/SUB     ABVLIM3
+  3022DIV  SQIN    6  ABVLIM   SQIN    6  SUB
+MEAN-Q      3022DIV  
+  3022DIV  SQIN    6  3022DIV  SQME   24
+#
+## Compute return flows (20% of diversions)
+## These will be applied in the irrigated areas
+#
+WEIGH-TS    RETURN
+    1       ALLRETUR SQIN    6
+3022DIV   SQIN       0.20
+#
+## Distribute the return flows to the receiving
+## areas:
+## 3022 : No diverted flows are locally used
+## SACM8:                 50% (estimated)
+## HNDM8:                 50% (estimated)
+#
+WEIGH-TS    SACM8RET 
+    1       SACM8RET SQIN    6
+ALLRETUR  SQIN       0.50
+WEIGH-TS    HNDM8RET 
+    1       HNDM8RET SQIN    6
+ALLRETUR  SQIN       0.50
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Compute Simulated Downstream Flows without ungaged diversion
+#
+#CHANGE-T    3022OBSD
+#  3022OBSD SQME   24  3022OBSD SQIN    6
+#WEIGH-TS    WT9-SIMULATEDTOTALNODIVERSION
+#    3       3022TOT  SQIN    6
+#3022      SQIN       1.00
+#ROUTED    SQIN       1.00
+#3022OBSD  SQIN      -1.00
+#
+# Save this time series
+#
+#WEIGH-TS    WT10-SAVESIMULATEDTOTALNODIVERSION
+#    1       3022NOD  SQIN    6
+#3022TOT   SQIN       1.00
+#
+# Account for consumptive use (from total flows)
+#
+#CHANLOSS    3022 
+#ASSUMED LOSS         VARP
+#3022TOT    SQIN    6
+#     0.0       0.0       0.0       0.0       0.6       0.6
+#     0.6       0.9      0.95       0.75      0.35      0.0
+#MEAN-Q      MQ5-3022TOT 
+#  3022TOT  SQIN    6  3022TOT  SQME   24
+#
+# Compute the diversion that was actually possible
+#
+#CLEAR-TS
+#  3022DIV  SQIN    6
+#WEIGH-TS    WT10-ACTUALDIVERSION
+#    2       3022DIV  SQIN    6
+#3022NOD   SQIN       1.00
+#3022TOT   SQIN      -1.00
+#MEAN-Q      MQ2-ESTIMATEDDIVERSION
+#  3022DIV  SQIN    6  3022DIV  SQME   24
+#&& Replaced by modeling end
+#
+## Compute Simulated Downstream Flows
+## NO return flows from locally irrigated lands to include
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    3       3022TOT  SQIN    6
+3022      SQIN       1.00
+ROUTED    SQIN       1.00
+3022DIV   SQIN      -1.00
+MEAN-Q      MQ5-3022TOT 
+  3022TOT  SQIN    6  3022TOT  SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+## Not possible, no downstream observations
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+## Not possible
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT-3022
+COMPARE LAG TO INST          3    1    3
+ ARIT   40         0       200    3           #--Routed flows 
+  3022TOT  SQIN    6        TOTALSIM        t    # Simulated total  
+  FRDM8    SQIN    6        UPSTR           3    # Frenchman Reservoir upstream   
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed 
+#
+## Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+3022                    1 SLOG      174.  100  YES
+  3022     SQME        3022_LOC        l
+  3022     RAIM    6            3022                3022     SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS             174.    3022     SQME   24  3022     SQME   24
+#
+## For comparison use CHANLOSS to compute a French Canal diversion time series 
+## based on observed mean monthly flows from 1940 to 1967 (no overlap
+## with most of the simulation period)
+#
+SET-TS      AVGFRC 
+  AVGFRC   SQIN    6          0.0
+CHANLOSS    AVGFRC
+AVERAGE FRENCH       VARC                           0.0
+AVGFRC     SQIN    6
+      0.00      0.00     -0.06     -0.45     -0.47     -0.64
+     -0.56     -0.37     -0.09     -0.05     -0.01      0.00
+MEAN-Q      HRLM8DIV 
+  AVGFRC   SQIN    6  AVGFRC   SQME   24
+#
+## Change time step of diverted flows
+#
+CHANGE-T    3022OBSD
+  3022OBSD SQME   24  3022OBSD SQIN    6
+PLOT-TS     TOT&DIV 
+SIMULATED DIVERSIONS         3    2    6    0
+ ARIT   20         0       200    2           #--Total flow 
+  3022TOT  SQIN    6        TOTALSIM        t    # Simulated total
+  3022DIV  SQIN    6        FRENCHCANAL     f    # Simulated Frenchman Canal
+ ARIT   20         0       200    4           #--Total flow components
+  3022TOT  SQIN    6        TOTALSIM        t    # Available for diversion
+  AVAIL    SQIN    6        AVAILABLE       a    # Local runoff
+  FRDDMD   SQIN    6        DEMAND          d    # Frenchman Canal Demand
+  3022DIV  SQIN    6        FRENCHCANAL     f    # Simulated Frenchman Canal
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+3022                    6 SLOG     5952.   50  YES
+  3022TOT  SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  3022     SQME        3022_LOC        l
+  3022OBSD SQME        FRENCHMAN C     d
+  3022DIV  SQME        SIM FRENCH      s
+  AVGFRC   SQME        AVGDIV          a
+  3022     RAIM    6            3022                3022     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS            5952.    3022TOT  SQME   24  3022TOT  SQME   24
+STOP

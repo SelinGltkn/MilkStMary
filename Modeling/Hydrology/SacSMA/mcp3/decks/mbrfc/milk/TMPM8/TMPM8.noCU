@@ -1,0 +1,202 @@
+TMPM8  Beaver Creek blo Guston Coulee
+   10 1994    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+TMPM8      MAP     6            INPUT
+MAP/3036.MAP06
+TMPM8      MAT     6            INPUT
+MAT/3036.MAT
+TMPM8      SASC    6
+TMPM8      SWE     6
+TMPM8      RAIM    6
+TMPM8      ROCL   24
+TMPM8      SMZC   24
+TMPM8      INFW    6
+# ----- Observed Streamflow Observations ------------
+TMPM8      QME    24            INPUT
+TotQME/TMPM8.OBS.QME
+TMPM8      QIN     6
+3057       SQIN    6            INPUT
+TotQINE/3057.TOT.QINE
+3057RTD    SQIN    6
+# ----- Gaged Diversions ----------------------------
+# none 
+# ----- Un-Gaged Diversions -------------------------
+TMPM8DIV   SQIN    6
+TMPM8DIV   SQME   24
+ROUTEDOD   SQIN    6
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            INTERNAL
+ROUTED     SQME   24            INTERNAL
+# ----- Computed Local Natural Flows ----------------
+TMPM8NAT   QIN     6
+TMPM8NAT   QME    24            OUTPUT
+NatQME/TMPM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+TMPM8LOC   SQIN    6
+TMPM8LOC   SQME   24            OUTPUT
+NatSQME/TMPM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+TMPM8TOT   SQIN    6
+TMPM8TOT   SQME   24            OUTPUT
+TotSQME/TMPM8.TOT.SQME
+TMPM8TOT   QINE    6            OUTPUT
+TotQINE/TMPM8.TOT.QINE
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    TMPM8
+  TMPM8    QME    24  TMPM8    QIN     6
+#
+## Route the upstream flow (simulated adjusted to observed)
+#
+LAG/K       LK1-TMPM8
+3057     SQIN  6 3057RTD  SQIN  6     2     2 ENGL 0.00       0.0
+       9   0   6   700
+       6   0   3   700
+           0
+#
+## Compute routed flow
+#
+WEIGH-TS    WT1-ROUTED
+    1       ROUTED   SQIN    6
+3057RTD   SQIN       1.00
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-TMPM8     
+TMPM8                769.  41.            YES SUMS           RDCO
+    6  TMPM8    MAP      1.000       TMPM8    RAIM
+  TMPM8    MAT     6      769.  0.0  0.0
+  TMPM8    SWE     6            TMPM8    SASC    6
+ 1.00 1.100.2000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .23  .39  .55  .70  .82  .89  .94  .97  .99
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-TMPM8   
+TMPM8                        6  TMPM8    RAIM       TMPM8    INFW
+  TMPM8    SASC    6  TMPM8     TMPM8    SUMS                FRZE
+                    1.0001.000 60.0 60.00.2800.0030.0000.005    0  .00
+                     20.0 2.00 180. 30.0 80.00.0800.0020.200 .300  .00
+                    0.400.641.202.513.834.715.444.963.271.870.850.49
+                      5.0  0.0  20.  0.0  10.  25.    0
+  TMPM8    MAT     6                 TMPM8    SWE     6
+0.1000.0800.050 0.00 -3.00.000  8.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-TMPM8
+TMPM8                         249.0    5           ENGL     0.000
+  TMPM8    INFW    6  TMPM8LOC SQIN    6
+    4258.7    9732.1    7548.7    3762.5    1472.1
+MEAN-Q      MQ4-TMPM8LOC
+  TMPM8LOC SQIN    6  TMPM8LOC SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Save the routed time series
+#
+WEIGH-TS    WT10-SAVESIMULATEDROUTEDNODIVERSION
+    1       ROUTEDOD SQIN    6
+ROUTED    SQIN       1.00
+#
+# Account for consumptive use (from routed flows)
+#
+CHANLOSS    TMPM8
+ASSUMED LOSS         VARC
+ROUTED     SQIN    6
+     0.0       0.0       0.0       0.0     -0.15      -0.3
+    -0.3     -0.15     -0.15     -0.15       0.0       0.0
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  TMPM8DIV SQIN    6
+WEIGH-TS    WT10-ACTUALDIVERSION
+    2       TMPM8DIV SQIN    6
+ROUTEDOD  SQIN       1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-ESTIMATEDDIVERSION
+  TMPM8DIV SQIN    6  TMPM8DIV SQME   24
+#
+# Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       TMPM8TOT SQIN    6
+TMPM8LOC  SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ5-TMPM8TOT
+  TMPM8TOT SQIN    6  TMPM8TOT SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-TMPM8
+TMPM8                   0    1    0
+TMPM8      QME    24
+TMPM8TOT   SQIN    6
+TMPM8TOT   QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       TMPM8NAT QIN     6
+TMPM8     QIN        1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  TMPM8NAT QIN     6  TMPM8NAT QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT-TMPM8
+COMPARE LAG TO INST          3    1    4
+ ARIT   40         0       200    4
+  TMPM8    QIN     6        DOWNSTR         d
+  3057     SQIN    6        UPSTR           m
+  ROUTED   SQIN    6        ROUTED          r
+  ROUTEDOD SQIN    6        RTDNODIV        t
+STAT-QME    LAG
+LAG ANALYSIS-TMPM8      9999.9  ROUTED   SQME   24  TMPM8    QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+TMPM8                   2 SLOG      645.  100  YES
+  TMPM8NAT QME         OBSRVD_NAT      o
+  TMPM8LOC SQME        TMPM8_LOC       l
+  TMPM8    RAIM    6            TMPM8               TMPM8    SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS             645.    TMPM8LOC SQME   24  TMPM8NAT QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+TMPM8                   4 SLOG    54026.   50  YES
+  TMPM8    QME         OBSRVD_TOT      o
+  TMPM8TOT SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  TMPM8LOC SQME        TMPM8_LOC       l
+  TMPM8    RAIM    6            TMPM8               TMPM8    SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS           54026.    TMPM8TOT SQME   24  TMPM8    QME    24
+PEAKFLOW   TMPM8
+instantaneous         06166000  TMPM8TOT SQIN
+    6    2    0    0    TMPM8.OBS.PEAK
+STOP

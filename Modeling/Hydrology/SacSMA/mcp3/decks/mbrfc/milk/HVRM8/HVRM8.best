@@ -1,0 +1,291 @@
+HVRM8 Milk River at Havre MT
+   10 1954    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data --------------
+HVRM8UP    MAP     6            INPUT
+MAP/hvrm8upr.MAP06
+HVRM8UP    MAT     6            INPUT
+MAT/hvrm8upr.MAT
+HVRM8UP    SASC    6
+HVRM8UP    RAIM    6
+HVRM8UP    ROCL   24
+HVRM8UP    SMZC   24
+HVRM8UP    INFW    6
+HVRM8LO    MAP     6            INPUT
+MAP/hvrm8lwr.MAP06
+HVRM8LO    MAT     6            INPUT
+MAT/hvrm8lwr.MAT
+HVRM8LO    SASC    6
+HVRM8LO    RAIM    6
+HVRM8LO    ROCL   24
+HVRM8LO    SMZC   24
+HVRM8LO    INFW    6
+3029       INFW    6
+3029       RAIM    6
+3029       ROCL   24
+3029       SMZC   24
+HVRM8UP    SQIN    6
+HVRM8UP    SQME   24
+HVRM8LO    SQIN    6
+HVRM8LO    SQME   24
+# ----- Regulation Modeling -------------------------
+# Local diversions for 3.7 sqkm irrigation ignored for now
+# ----- Upstream Return Flows -----------------------
+# None (Fresno Dam)
+# ----- Observed Streamflow -------------------------
+HVRM8      QME    24            INPUT
+TotQME/HVRM8.OBS.QME
+HVRM8      QIN     6
+HAVM8      SQME   24            INPUT
+TotQME/HAVM8.OBS.RQME
+HAVM8      SQIN    6
+HAVM8RTD   SQIN    6
+HAVM8RTD   SQME   24
+BSMM8      SQIN    6            INPUT
+TotQINE/BSMM8.TOT.SQIN
+BSMM8RTD   SQIN    6
+BSMM8RTD   SQME   24
+BSMM8      QME    24            INPUT
+TotQME/BSMM8.OBS.QME
+BSMM8      QIN     6
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# Currently not modelled
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6
+ROUTED     SQME   24
+# ----- Computed Local Natural Flows ----------------
+3029       QIN     6
+3029       QME    24            OUTPUT
+NatQME/HVRM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+3029       SQIN    6
+3029       SQME   24            OUTPUT
+NatSQME/HVRM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+HVRM8      SQIN    6
+HVRM8      SQME   24            OUTPUT
+TotSQME/HVRM8.TOT.SQME
+HVRM8      QINE    6            OUTPUT
+TotQINE/HVRM8.TOT.QINE
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    HVRM8
+  HVRM8    QME    24  HVRM8    QIN     6
+#
+## Route the Upstream Releases from Fresno Reservoir
+#
+CHANGE-T    HAVM8
+  HAVM8    SQME   24  HAVM8    SQIN    6
+LAG/K       HAVM8
+HAVM8    SQIN  6 HAVM8RTD SQIN  6     4     0 ENGL 0.00       0.0
+     24   0   18   350    12  700  1  1100
+     3
+           0
+MEAN-Q      MQ2-ROUTED
+  HAVM8RTD SQIN    6  HAVM8RTD SQME   24
+#
+## Route the Upstream Releases from BSMM8
+#
+LAG/K       BSMM8
+BSMM8    SQIN  6 BSMM8RTD SQIN  6     0     0 ENGL 0.00       0.0
+      3.0
+      3.0
+           0
+MEAN-Q      MQ3-ROUTED
+  BSMM8RTD SQIN    6  BSMM8RTD SQME   24
+#
+## Sum up routed flows
+#
+WEIGH-TS    WT2-SUMOFROUTED
+    2       ROUTED   SQIN    6
+HAVM8RTD  SQIN       1.00
+BSMM8RTD  SQIN       1.00
+MEAN-Q      MQ4-ROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-UPR
+UP HVRM8 ABV 4000ft 1410.  41.            YES SUMS           RDCO
+    6  HVRM8UP  MAP      1.000       HVRM8UP  RAIM
+  HVRM8UP  MAT     6     1410.  0.6  0.6
+                                HVRM8UP  SASC    6
+ 1.15 1.000.2000.1001800.    0
+0.1500.2000.000 2.000.0500.300
+  .10  .19  .29  .39  .53  .67  .79  .87  .94
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+UP HVRM8 ABV 4000ft          6  HVRM8UP  RAIM       HVRM8UP  INFW
+  HVRM8UP  SASC    6  HVRM8UP   HVRM8UP  SUMS
+                    1.0001.000 20.0 30.00.4000.0100.0000.000    0 .280
+                     50.0 2.50 75.0 75.0 100.0.0950.0080.400 .300  .00
+                    0.430.681.211.702.463.143.813.412.160.950.390.38
+                     18.0  1.0  70. 12.0  83.  90.    0
+SNOW-17     SN2-LWR
+LO HVRM8 BLW 6000ft  855. 41.0            YES SUMS           RDCO
+    6  HVRM8LO  MAP      1.000       HVRM8LO  RAIM
+  HVRM8LO  MAT     6      855.  0.6  0.6
+                                HVRM8LO  SASC    6
+ 1.15 1.200.4000.100 650.    0
+0.1500.2000.000 2.000.0500.300
+  .31  .52  .70  .79  .84  .89  .92  .95  .98
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC2-LWR
+LO HVRM8 BLW 6000ft          6  HVRM8LO  RAIM       HVRM8LO  INFW
+  HVRM8LO  SASC    6  HVRM8LO   HVRM8LO  SUMS
+                    1.0001.000 20.0 30.00.4000.0100.0000.000    0 .010
+                     50.0 2.50 75.0 75.0 100.0.0950.0080.400 .300  .00
+                    0.420.661.161.942.893.644.253.882.501.230.550.38
+                     18.0  1.0  70. 12.0  83.  90.    0
+#
+## Weighting of the Elevation Zones
+#
+WEIGH-TS    WT1-SUMINFLO
+    2       3029     INFW    6
+HVRM8UP   INFW       0.21
+HVRM8LO   INFW       0.79
+WEIGH-TS    WE2
+    2       3029     RAIM    6
+HVRM8UP   RAIM       0.21
+HVRM8LO   RAIM       0.79
+WEIGH-TS    WE3
+    2       3029     ROCL   24
+HVRM8UP   ROCL       0.21
+HVRM8LO   ROCL       0.79
+WEIGH-TS    WE4
+    2       3029     SMZC   24
+HVRM8UP   SMZC       0.21
+HVRM8LO   SMZC       0.79
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3029
+3029                           34.6    2           ENGL     0.000
+  3029     INFW    6  3029     SQIN    6
+    3396.1     324.4
+MEAN-Q      MQ4-3029    
+  3029     SQIN    6  3029     SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#CHANLOSS    HVRM8
+#ASSUMED LOSS         VARC
+#HVRM8      SQIN    6
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#&& Replaced by modeling end
+#
+## Compute Simulated Downstream Flows
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    2       HVRM8    SQIN    6
+3029      SQIN       1.00
+ROUTED    SQIN       1.00
+MEAN-Q      MQ5-HVRM8   
+  HVRM8    SQIN    6  HVRM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-HVRM8
+HVRM8                   0    1    0
+HVRM8      QME    24
+HVRM8      SQIN    6
+HVRM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    2       3029     QIN     6
+HVRM8     QIN        1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  3029     QIN     6  3029     QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+CHANGE-T    BSMM8
+  BSMM8    QME    24  BSMM8    QIN     6
+PLOT-TS     PLOT-HVRM8
+COMPARE LAG TO INST          3    1    7
+ ARIT   40         0        80    7           #--Routed flows
+  HVRM8    QIN     6        DOWNSTR         d    # Observed total
+  HVRM8    SQIN    6        TOTALSIM        t    # Simulated total 
+  HAVM8    SQIN    6        HAVM8           h    # HAVM8 upstream 
+  HAVM8RTD SQIN    6        HAVM8RTD        1    # HAVM8 routed 
+  BSMM8    QIN     6        BSMM8           b    # BSMM8 upstream 
+  BSMM8RTD SQIN    6        BSMM8RTD        2    # BSMM8 routed 
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed  
+STAT-QME    LAG
+LAG ANALYSIS-PDBM8      9999.9  ROUTED   SQME   24  HVRM8    QME    24
+#
+## Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+HVRM8                   2 SLOG      90.0   50  YES
+  3029     QME         OBSRVD_NAT      o
+  3029     SQME        HVRM8_LOC       l
+  3029     RAIM    6            3029                3029     SMZC
+STAT-QME    ST1-LOCALNATURAL
+LOCAL FLOWS             90.0    3029     SQME   24  3029     QME    24
+#
+## Additional Natural Local Flows: Plotting of Elevation Zone Components
+#
+WEIGH-TS    WT2-UPPER
+    1       HVRM8UP  INFW    6
+HVRM8UP   INFW      0.21
+UNIT-HG     UH2-HVRM8
+HVRM8                          34.6    3           ENGL     0.000
+  HVRM8UP  INFW    6  HVRM8UP  SQIN    6
+    3396.1     324.4
+MEAN-Q      MQ2-HVRM8UP
+  HVRM8UP  SQIN    6  HVRM8UP  SQME   24
+WEIGH-TS    WT3-LOWER
+    1       HVRM8LO  INFW    6
+HVRM8LO   INFW      0.79
+UNIT-HG     UH3-HVRM8
+HVRM8                          34.6    3           ENGL     0.000
+  HVRM8LO  INFW    6  HVRM8LO  SQIN    6
+    3396.1     324.4
+MEAN-Q      MQ3-HVRM8LO
+  HVRM8LO  SQIN    6  HVRM8LO  SQME   24
+WY-PLOT     WY2-COMPONENTS
+HVRM8                   4 SLOG      90.0   50  YES
+  HVRM8    QME         OBSERVEDLOC     n
+  3029     SQME        SIMULATEDLOC    s
+  HVRM8UP  SQME        UPPER_PORTION   u
+  HVRM8LO  SQME        LOWER_PORTION   l
+  HVRM8UP  RAIM    6            HVRM8UP             HVRM8UP  SMZC
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+HVRM8                   4 SLOG    14266.  250  YES
+  HVRM8    QME         OBSERVED        o
+  HVRM8    SQME        HVRM8_TOT       t
+  ROUTED   SQME        ROUTED          r
+  3029     SQME        SIMULATEDLOC    l
+  3029     RAIM    6            3029                3029     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS           14266.    HVRM8    SQME   24  HVRM8    QME    24
+PEAKFLOW   HVRM8
+instantaneous         06140500  HVRM8    SQIN
+    6    2    0    0    HVRM8.OBS.PEAK
+STOP

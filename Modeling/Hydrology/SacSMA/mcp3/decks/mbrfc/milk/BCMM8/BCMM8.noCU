@@ -1,0 +1,204 @@
+BCMM8  Battle Cr. Nr Chinook, MT
+   10 1980    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+BCMM8      MAP     6            INPUT
+MAP/3014.MAP06
+BCMM8      MAT     6            INPUT
+MAT/3014.MAT
+BCMM8      SASC    6
+BCMM8      SWE     6
+BCMM8      RAIM    6
+BCMM8      ROCL   24
+BCMM8      SMZC   24
+BCMM8      INFW    6
+# ----- Observed Streamflow Observations ------------
+BCMM8      QME    24            INPUT
+TotQME/BCMM8.OBS.QME
+BCMM8      QIN     6
+3018       SQIN    6            INPUT
+TotQINE/3018.TOT.QINE
+3018RTD    SQIN    6
+# ----- Gaged Diversions ----------------------------
+# none at this time
+# ----- Un-Gaged Diversions -------------------------
+BCMM8DIV   SQIN    6
+BCMM8DIV   SQME   24
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            INTERNAL
+ROUTED     SQME   24            INTERNAL
+# ----- Computed Local Natural Flows ----------------
+BCMM8NAT   QIN     6
+BCMM8NAT   QME    24            OUTPUT
+NatQME/BCMM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+BCMM8LOC   SQIN    6
+BCMM8LOC   SQME   24            OUTPUT
+NatSQME/BCMM8.LOC.NAT.SQME
+# ----- Simulated Total Observed Flows --------------
+BCMM8TOT   SQIN    6
+BCMM8NOD   SQIN    6
+BCMM8TOT   SQME   24            OUTPUT
+TotSQME/BCMM8.TOT.SQME
+BCMM8TOT   QINE    6            OUTPUT
+TotQINE/BCMM8.TOT.QINE
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    BCMM8
+  BCMM8    QME    24  BCMM8    QIN     6
+#
+## Route the upstream flow (simulated adjusted to observed)
+#
+LAG/K       LK1-3018
+3018     SQIN  6 3018RTD  SQIN  6     2     2 ENGL 0.00       0.0
+      30   0   12   350
+      15   0    6   350
+           0
+#
+## Compute routed flow
+#
+WEIGH-TS    WT1-ROUTED
+    1       ROUTED   SQIN    6
+3018RTD   SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-BCMM8     
+BCMM8                878.  41.            YES SUMS           RDCO
+    6  BCMM8    MAP      1.000       BCMM8    RAIM
+  BCMM8    MAT     6      878.  0.0  0.0
+  BCMM8    SWE     6            BCMM8    SASC    6
+ 1.00 1.100.3000.1509999.    0
+0.1500.2000.000 1.000.0500.100
+  .10  .16  .25  .33  .41  .48  .55  .64  .74
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-BCMM8   
+BCMM8                        6  BCMM8    RAIM       BCMM8    INFW
+  BCMM8    SASC    6  BCMM8     BCMM8    SUMS                FRZE
+                    1.0001.000 75.0 45.00.3000.0000.0000.050    0  .00
+                     80.0 2.30  90. 30.0 70.00.1200.0070.250 .300  .00
+                    0.390.631.162.323.674.575.324.723.081.760.790.46
+                      5.0  0.0  20.  0.0  10.  25.    0
+  BCMM8    MAT     6                 BCMM8    SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-BCMM8
+BCMM8                         627.0    8           ENGL     0.000
+  BCMM8    INFW    6  BCMM8LOC SQIN    6
+    2464.5   10657.2   15643.8   14754.7  10920.9    6934.3    3960.9
+    2093.9
+MEAN-Q      MQ4-BCMM8LOC
+  BCMM8LOC SQIN    6  BCMM8LOC SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Compute Simulated Downstream Flows without diversion
+#
+WEIGH-TS    WT9-SIMULATEDTOTALNODIVERSION
+    2       BCMM8TOT SQIN    6
+BCMM8LOC  SQIN       1.00
+ROUTED    SQIN       1.00
+#
+# Save this time series
+#
+WEIGH-TS    WT10-SAVESIMULATEDTOTALNODIVERSION
+    1       BCMM8NOD SQIN    6
+BCMM8TOT  SQIN       1.00
+#
+# Account for consumptive use (from total flows)
+#
+# Ignore the North Cinook Reservoir 
+# Its mean annual flow volume is 1.94 cmsd before 1967 only)
+#
+CHANLOSS    BCMM8
+ASSUMED LOSS         VARC
+BCMM8TOT   SQIN    6
+     0.0       0.0       0.0       0.0       0.05      0.1
+     0.1       0.1       0.1       0.05      0.0       0.0
+MEAN-Q      MQ5-BCMM8TOT
+  BCMM8TOT SQIN    6  BCMM8TOT SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  BCMM8DIV SQIN    6
+WEIGH-TS    WT10-ACTUALDIVERSION
+    2       BCMM8DIV SQIN    6
+BCMM8NOD  SQIN       1.00
+BCMM8TOT  SQIN      -1.00
+MEAN-Q      MQ2-ESTIMATEDDIVERSION
+  BCMM8DIV SQIN    6  BCMM8DIV SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-BCMM8
+BCMM8                   0    1    0
+BCMM8      QME    24
+BCMM8TOT   SQIN    6
+BCMM8TOT   QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    3       BCMM8NAT QIN     6
+BCMM8     QIN        1.00
+BCMM8DIV  SQIN       1.00
+ROUTED    SQIN      -1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  BCMM8NAT QIN     6  BCMM8NAT QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Routed Flows
+#
+PLOT-TS     PLOT-BCMM8
+COMPARE LAG TO INST          3    1    3
+ ARIT   40         0       200    3
+  BCMM8    QIN     6        DOWNSTR         d
+  3018     SQIN    6        UPSTR           m
+  ROUTED   SQIN    6        ROUTED          r
+STAT-QME    LAG
+LAG ANALYSIS-BCMM8      9999.9  ROUTED   SQME   24  BCMM8    QME    24
+#
+# Natural Local Flows
+#
+WY-PLOT     WY2-LOCALNATURAL
+BCMM8                   2 SLOG     1627.  100  YES
+  BCMM8NAT QME         OBSRVD_NAT      o
+  BCMM8LOC SQME        BCMM8_LOC       l
+  BCMM8    RAIM    6            BCMM8               BCMM8    SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS            1627.    BCMM8LOC SQME   24  BCMM8NAT QME    24
+#
+# Total Flows
+#
+WY-PLOT     WY3-TOTALOBSERVED
+BCMM8                   5 SLOG     4104.   50  YES
+  BCMM8    QME         OBSRVD_TOT      o
+  BCMM8TOT SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  BCMM8LOC SQME        BCMM8_LOC       l
+  BCMM8DIV SQME        DIVERSION       d
+  BCMM8    RAIM    6            BCMM8               BCMM8    SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS            4104.    BCMM8TOT SQME   24  BCMM8    QME    24
+STOP

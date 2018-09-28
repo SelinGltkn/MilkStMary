@@ -1,0 +1,140 @@
+ORHM8  Rock Crk blo Horse Crk at Intl Bndry
+    8 1957    9 2004
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+ORHM8      MAP     6            INPUT
+MAP/3056.MAP06
+ORHM8      MAT     6            INPUT
+MAT/3056.MAT
+ORHM8      SASC    6
+ORHM8      SWE     6
+ORHM8      RAIM    6
+ORHM8      INFW    6
+ORHM8      ROCL   24
+ORHM8      SMZC   24
+# ----- Observed Streamflow Observations ------------
+ORHM8      QME    24            INPUT
+TotQME/ORHM8.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+ORHM8DIV   SQIN    6
+ORHM8DIV   SQME   24
+# ----- Sum of Routed Flows -------------------------
+# Headwater
+# ----- Computed Local Natural Flows ----------------
+ORHM8NAT   QME    24            OUTPUT
+NatQME/ORHM8.LOC.NAT.QME
+# ----- Simulated Local Natural Flows ---------------
+ORHM8LOC   SQIN    6
+ORHM8LOC   SQME   24
+# ----- Simulated Total Observed Flows --------------
+ORHM8TOT   SQIN    6
+ORHM8TOT   SQME   24
+ORHM8TOT   QINE    6            OUTPUT
+TotQINE/ORHM8.TOT.QINE
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Snow and Soil Modeling
+#
+SNOW-17     SN1-UPR
+ORHM8                885.  45.            YES SUMS           RDCO
+    6  ORHM8    MAP      1.000       ORHM8    RAIM
+  ORHM8    MAT     6      885.  0.6  0.6
+  ORHM8    SWE     6            ORHM8    SASC    6
+ 1.45 1.100.2000.0509999.    0
+0.1500.2000.000 1.000.0500.050
+  .23  .39  .55  .70  .82  .89  .94  .97  .99
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-UPR
+ORHM8                        6  ORHM8    RAIM       ORHM8    INFW
+  ORHM8    SASC    6  ORHM8     ORHM8    SUMS                FRZE
+                    1.0001.000 40.0 60.00.2800.0030.0000.005    0  .02
+                     20.0 2.00 180. 30.0 80.00.0800.0020.200 .300  .00
+                    0.370.581.142.393.764.665.284.793.121.760.770.44
+                       1.  0.0   1.  0.0   1.   1.    0
+  ORHM8    MAT     6                 ORHM8    SWE     6
+0.1000.0800.050 0.00 -3.00.000  8.0   0.   0.   0.
+  0.0                           5.0  0.0
+#
+# Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-ORHM8
+ORHM8                          317.    5           ENGL     0.000
+  ORHM8    INFW    6  ORHM8LOC SQIN    6
+    4664.0   11693.4    9952.2    5441.3    2335.1
+#
+# Account for consumptive use
+#
+CHANLOSS    ORHM8
+ASSUMED LOSS         VARP
+ORHM8LOC   SQIN    6
+     0.0       0.0       0.0       0.0       0.6       0.6
+     0.6       0.9      0.95       0.75      0.35      0.0
+MEAN-Q      MQ1-ORHM8LOC
+  ORHM8LOC SQIN    6  ORHM8LOC SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Total flow equals local flow
+#
+WEIGH-TS    WT1-SAVESIMULATEDTOTALNODIVERSION
+    1       ORHM8TOT SQIN    6
+ORHM8LOC  SQIN      1.00
+#
+MEAN-Q      MQ2-ORHM8TOT
+  ORHM8TOT SQIN    6  ORHM8TOT SQME   24
+#
+# Compute the diversion that was actually possible
+#
+CLEAR-TS
+  ORHM8DIV SQIN   6
+WEIGH-TS    WT2-ACTUALDIVERSION
+    2       ORHM8DIV SQIN    6
+ORHM8LOC  SQIN      1.00
+ORHM8TOT  SQIN     -1.00
+MEAN-Q      MQ3-ESTIMATEDDIVERSION
+  ORHM8DIV SQIN    6  ORHM8DIV SQME   24
+#
+# Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-ORHM8
+ORHM8                  0    1    0
+ORHM8      QME   24
+ORHM8TOT   SQIN   6
+ORHM8TOT   QINE   6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT3-LOCALNATURAL
+    2       ORHM8NAT QME    24
+ORHM8     QME       1.00
+ORHM8DIV  SQME      1.00
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+# Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY1-LOCALNATURAL
+ORHM8                   2 SLOG      821.   25  YES
+  ORHM8NAT QME        OBSERVEDNAT     n
+  ORHM8LOC SQME       SIMULATEDLOC    s
+  ORHM8    RAIM    6            ORHM8               ORHM8    SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS             821.    ORHM8LOC SQME   24  ORHM8NAT QME    24
+PEAKFLOW   ORHM8
+instantaneous         06169500  ORHM8LOC SQIN
+    6    2    0    0    ORHM8.OBS.PEAK
+STOP

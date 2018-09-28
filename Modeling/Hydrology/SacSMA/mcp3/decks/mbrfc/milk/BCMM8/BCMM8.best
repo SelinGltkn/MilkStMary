@@ -1,0 +1,403 @@
+BCMM8  Battle Cr. Nr Chinook, MT
+   10 1980    9 2004  ENG
+DEF-TS
+# ----- Snow and Soil Modeling Data -----------------
+3014       MAP     6            INPUT
+MAP/3014.MAP06
+3014       MAT     6            INPUT
+MAT/3014.MAT
+3014       SASC    6
+3014       SWE     6
+3014       RAIM    6
+3014       ROCL   24
+3014       SMZC   24
+3014       INFW    6
+# ----- Regulation Modeling ------------------------
+# For the local irrgiation of 7 sqkm in the US and
+# more in Canada
+# Average MAT
+MAT        INFW    6            INTERNAL
+AVGMAT     SQIN    6            INTERNAL
+AVGMAT     MAT     6            INTERNAL
+# Consumptive use model
+UNLIMITD   SQME   24            INTERNAL
+REMAIN     SQME   24            INTERNAL
+RFIN       SQME   24            INTERNAL
+RFOUT      SQME   24            INTERNAL
+OTHLOSS    SQME   24            INTERNAL
+CROPDMD    SQME   24            INTERNAL
+CROPET     MAPE   24            INTERNAL
+# Consumptive use model estimate of diversion
+CUDIV      SQME   24            INTERNAL
+CUDIV      SQIN    6            INTERNAL
+# Precip sum
+SUMMAP     SQIN    6            INTERNAL
+PERCENT    DFAC    6            INTERNAL
+# Diversion reduced in high precip periods
+PCPNDIV    SQIN    6            INTERNAL
+PCPNDIV    SQME   24            INTERNAL
+# Julian date
+JULDATE    SQIN    6            INTERNAL
+CUTOFF     DFAC    6            INTERNAL
+# Diversion with clipped start/end 
+CLIPDDIV   SQME   24            INTERNAL
+# Available to divert
+AVAIL      SQIN    6            INTERNAL
+AVAIL      SQME   24            INTERNAL
+# Excess diversion
+ABVLIM     SQIN    6            INTERNAL
+# Final diversion
+BCMM8DIV   SQIN    6            INTERNAL
+BCMM8DIV   SQME   24            INTERNAL
+# Return flow
+DIVLOSS    SQIN    6            INTERNAL
+ALLRETUR   SQIN    6            INTERNAL
+BCMM8RET   SQIN    6            OUTPUT
+ReturnFlows/BCMM8_BCMM8.RET.SQIN
+BCMM8RET   SQME   24            INTERNAL
+# ----- Upstream Return Flows -----------------------
+# None currently, but possible from 3018
+# ----- Observed Streamflow Observations ------------
+BCMM8      QME    24            INPUT
+TotQME/BCMM8.OBS.QME
+BCMM8      QIN     6
+3018       SQIN    6            INPUT
+TotQINE/3018.TOT.QINE
+3018RTD    SQIN    6
+# ----- Gaged Diversions ----------------------------
+# None, North Cinook Reservoir Import (mean annual 
+# flow of 1.94 cmsd before 1967)currently ignored
+# ----- Un-Gaged Diversions -------------------------
+# not individually modelled 
+# ----- Sum of Routed Flows -------------------------
+ROUTED     SQIN    6            INTERNAL
+ROUTED     SQME   24            INTERNAL
+# ----- Computed Local Natural Flows ----------------
+3014       QIN     6
+3014       QME    24            OUTPUT
+NatQME/BCMM8.LOC.NAT.QME                                               (6F10.2) 
+# ----- Simulated Local Natural Flows ---------------
+3014       SQIN    6
+3014       SQME   24            OUTPUT
+NatSQME/BCMM8.LOC.NAT.SQME                                             (6F10.2) 
+# ----- Simulated Total Observed Flows --------------
+BCMM8      SQIN    6
+BCMM8      SQME   24            OUTPUT
+TotSQME/BCMM8.TOT.SQME                                                 (6F10.2) 
+BCMM8      QINE    6            OUTPUT
+TotQINE/BCMM8.TOT.QINE                                                 (6F10.2) 
+END
+#
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Change downstream observed to 6-hour interval
+#
+CHANGE-T    BCMM8
+  BCMM8    QME    24  BCMM8    QIN     6
+#
+## Route the upstream flow (simulated adjusted to observed)
+#
+LAG/K       LK1-3018
+3018     SQIN  6 3018RTD  SQIN  6     2     2 ENGL 0.00       0.0
+      30   0   12   350
+      15   0    6   350
+           0
+#
+## Compute routed flow
+#
+WEIGH-TS    WT1-ROUTED
+    1       ROUTED   SQIN    6
+3018RTD   SQIN       1.00
+MEAN-Q      MQ1-SUMROUTED
+  ROUTED   SQIN    6  ROUTED   SQME   24
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-3014      
+3014                 878.  41.            YES SUMS           RDCO
+    6  3014     MAP      1.000       3014     RAIM
+  3014     MAT     6      878.  0.0  0.0
+  3014     SWE     6            3014     SASC    6
+ 1.00 1.100.3000.1509999.    0
+0.1500.2000.000 1.000.0500.100
+  .10  .16  .25  .33  .41  .48  .55  .64  .74
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3014    
+3014                         6  3014     RAIM       3014     INFW
+  3014     SASC    6  3014      3014     SUMS                FRZE
+                    1.0001.000 75.0 45.00.3000.0000.0000.050    0  .00
+                     80.0 2.30  90. 30.0 70.00.1200.0070.250 .300  .00
+                    0.390.631.162.323.674.575.324.723.081.760.790.46
+                      5.0  0.0  20.  0.0  10.  25.    0
+  3014     MAT     6                 3014     SWE     6
+0.1000.0800.050 0.00 -3.00.150 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3014 
+3014                          627.0    8           ENGL     0.000
+  3014     INFW    6  3014     SQIN    6
+    2464.5   10657.2   15643.8   14754.7  10920.9    6934.3    3960.9
+    2093.9
+MEAN-Q      MQ4-3014    
+  3014     SQIN    6  3014     SQME   24
+#
+# --------------- Irrigation Diversion Modeling ------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Use CONS_USE model and adjustments to model the irrigation diversions. 
+#
+## Create an unlimited supply 
+#
+SET-TS      UNLIMITD
+  UNLIMITD SQME   24   99999999.0
+#
+## Take 7-day average MAT for input into CONS_USE model instead of 6-hour 
+## MAT. 
+#
+LOOKUP      AVG_MAT1
+    2    0
+3014      MAT      6
+MAT       INFW     6
+      -500.0      -500.0       500.0       500.0 
+UNIT-HG     AVG_MAT2
+AVERAGE MAT OVER 7 DAYS       0.0093  28           ENGL     0.000
+  MAT      INFW    6  AVGMAT   SQIN    6
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357    0.0357
+LOOKUP      AVG_MAT3
+    2    0
+AVGMAT    SQIN     6
+AVGMAT    MAT      6
+      -500.0      -500.0       500.0       500.0 
+#
+## Consumptive Use Model (return flows turned off)
+## for the irrigation of 7+ sqkm ungaged lands
+#
+CONS_USE    BCMM8
+BCMM8 CONSUMPTIVE USE
+0
+AVGMAT MAT  UNLIMITD SQME
+REMAIN SQME CUDIV SQME
+RFIN SQME RFOUT SQME OTHLOSS SQME CROPDMD SQME CROPET MAPE
+ 48.0   7.  0.40 0.0
+0.00 0.00 0.00 0.50 0.70 0.70
+0.50 0.50 0.30 0.20 0.00 0.00
+    0.00     0.00     0.00
+CHANGE-T    CT2-CUDIV
+  CUDIV    SQME   24  CUDIV    SQIN    6
+#
+## Compute moving sum of RAIM 
+#
+UNIT-HG     SUMMAP
+SUM RAIM OVER 21 DAYS         0.5208  84           ENGL     0.000
+  3014     RAIM    6  SUMMAP   SQIN    6
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+       1.0       1.0       1.0       1.0       1.0       1.0       1.0
+#
+## Create a scaling time series, representing a fraction of the originally
+## computed diversion that will be diverted. If it rains more than 1.7 inches 
+## over 3 weeks, a reduction in the diversion begins, up to a maximum reduction 
+## of 60%.
+#
+LOOKUP      MAPPRCNT 
+    5    0
+SUMMAP    SQIN     6
+PERCENT   DFAC     6
+         0.0         1.0         0.5         1.0         1.7         1.0
+         3.0         0.4      1000.0         0.0
+#
+## Multiply the scaling factor times the diversion to reduce the diversion
+## in wet periods                                                                           
+#
+MULT/DIV    MAPPRCNT
+  CUDIV    SQIN    6  PERCENT  DFAC    6
+  PCPNDIV  SQIN   1
+#
+## Use CHANLOSS, LOOKUP, and MULT/DIV to set the start and end dates for 
+## the demand
+#
+SET-TS      JULIAN  
+  JULDATE  SQIN    6          0.0
+CHANLOSS    JULIAN 
+CREATE JULIAN DATE   VARC
+JULDATE    SQIN    6
+      -15.      -46.      -74.     -105.     -135.     -166.
+     -196.     -227.     -258.     -288.     -319.     -349.
+LOOKUP      DATECUT
+    4   -1
+JULDATE   SQIN     6
+CUTOFF    DFAC     6
+         91.         0.0        105.         1.0        305.         1.0
+        319.         0.0        
+MULT/DIV    DATECUT
+  PCPNDIV  SQIN    6  CUTOFF   DFAC    6
+  BCMM8DIV SQIN   1
+#
+## Compute flow available to divert (supply limitation)                                           
+#
+WEIGH-TS    WT9-AVAILABLETODIVERT
+    2       BCMM8    SQIN    6
+3014      SQIN       1.00
+ROUTED    SQIN       1.00
+ADD/SUB     AVAIL
+  AVAIL    SQIN    6  BCMM8    SQIN    6          
+CHANLOSS    REDUCE
+REDUCE AVAIL 4 DIV   VARC                           0.0
+AVAIL      SQIN    6
+      0.00      0.00      0.00      0.40      0.40      0.40
+      0.30      0.30      0.30      0.30      0.30      0.00
+MEAN-Q      CLIPPED
+  BCMM8DIV SQIN    6  CLIPDDIV SQME   24
+#
+## Take minimum of flow available and diversion
+#
+ADD/SUB     ABVLIM1
+  ABVLIM   SQIN    6  BCMM8DIV SQIN    6  ADD 
+ADD/SUB     ABVLIM2
+  ABVLIM   SQIN    6  AVAIL    SQIN    6  SUB 
+ADD/SUB     ABVLIM3
+  BCMM8DIV SQIN    6  ABVLIM   SQIN    6  SUB
+MEAN-Q      BCMM8DIV 
+  BCMM8DIV SQIN    6  BCMM8DIV SQME   24
+#
+## Compute return flows (20% of diversions)
+#
+WEIGH-TS    RETURN
+    1       BCMM8RET SQIN    6
+BCMM8DIV  SQIN       0.20
+#
+## Attenuate the local return flows
+##(Equivalent recession coefficient = 0.007)
+#
+LAG/K       LOCALRETURN 
+BCMM8RET SQIN  6 BCMM8RET SQIN  6     0     0 ENGL    0         0
+        0.
+     3500.
+         0
+MEAN-Q      BCMM8RET 
+  BCMM8RET SQIN    6  BCMM8RET SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#CHANLOSS    BCMM8
+#ASSUMED LOSS         VARC
+#BCMM8      SQIN    6
+#     0.0       0.0       0.0       0.0       0.05      0.1
+#     0.1       0.1       0.1       0.05      0.0       0.0
+#&& Replaced by modeling end
+#
+## Compute Simulated Downstream Flows
+## includes return flows from locally irrigated lands 
+#
+WEIGH-TS    WT9-SIMULATEDTOTALOBERVED
+    3       BCMM8    SQIN    6
+BCMM8     SQIN       1.00
+BCMM8DIV  SQIN      -1.00
+BCMM8RET  SQIN       1.00
+MEAN-Q      MQ5-BCMM8   
+  BCMM8    SQIN    6  BCMM8    SQME   24
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-BCMM8
+BCMM8                   0    1    0
+BCMM8      QME    24
+BCMM8      SQIN    6
+BCMM8      QINE    6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+#
+WEIGH-TS    WT1-LOCALNATURAL
+    3       3014     QIN     6
+BCMM8     QIN        1.00
+ROUTED    SQIN      -1.00
+BCMM8DIV  SQIN       1.00
+MEAN-Q      MQ2-LOCALNATURAL
+  3014     QIN     6  3014     QME    24
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Routed Flows
+#
+PLOT-TS     PLOT-BCMM8
+COMPARE LAG TO INST          3    1    4
+ ARIT   40         0       200    4           #--Routed flows 
+  BCMM8    QIN     6        DOWNSTR         d    # Observed total
+  BCMM8    SQIN    6        TOTALSIM        t    # Simulated total 
+  3018     SQIN    6        UPSTR           m    # 3018 upstream    
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed
+STAT-QME    LAG
+LAG ANALYSIS-BCMM8      9999.9  ROUTED   SQME   24  BCMM8    QME    24
+#
+## Diversions and Returns
+#
+PLOT-TS     TOT&DIV
+SIMULATED DIVERSIONS         3    5   14    0
+ ARIT   20         0       100    2           #--Total flow 
+  BCMM8    QIN     6        DOWNSTR         d    # Observed total
+  BCMM8    SQIN    6        TOTALSIM        t    # Simulated total
+ ARIT   20         0        15    6           #--Total flow components
+  BCMM8    QIN     6        DOWNSTR         d    # Observed total
+  3014     SQIN    6        LOCAL           l    # Local runoff
+  ROUTED   SQIN    6        UPSTREAM        u    # Sum of routed plus upstream returns
+  BCMM8RET SQIN    6        LOCAL RETN      r    # Local return flows
+  BCMM8DIV SQIN    6        BCMM8DIV        s    # Simulated irrigation diversion (subtract)
+  BCMM8    SQIN    6        TOTALSIM        t    # Simulated total
+ARIT   20         0         5    4            #--Irrigation diversion
+  BCMM8DIV SQIN    6        BCMM8DIV        s    # Simulated irrigation diversion
+  ROUTED   SQIN    6        ROUTED          r    # Sum of routed plus upstream returns
+  AVAIL    SQIN    6        AVAILABLE       a    # Flow available to divert
+  CUDIV    SQIN    6        UNLIMITED       u    # CU diversion (unlimited by precip, available flow)
+ ARIT   20         0       0.2    1            #--Sum of RAIM
+  SUMMAP   SQIN    6        MAP             m
+ ARIT   20         0         1    1            #--Percent reduction for precip
+  PERCENT  DFAC    6        REDUCTION       r
+#
+## Natural Local Flows
+#
+WY-PLOT     WY2-LOC
+BCMM8                   2          1627. 100.  YES
+  3014     QME         OBSRVD_NAT      o
+  3014     SQME        BCMM8_LOC       l
+  3014     RAIM    6            3014                3014     SMZC
+STAT-QME    ST2-LOCALNATURAL
+LOCAL FLOWS            1627.    3014     SQME   24  3014     QME    24
+#
+## Total Flows
+#
+WY-PLOT     WY3-TOT
+BCMM8                   5          4104.   50  YES
+  BCMM8    QME         OBSRVD_TOT      o
+  BCMM8    SQME        SIM_TOT         t
+  ROUTED   SQME        ROUTED          r
+  3014     SQME        BCMM8_LOC       l
+  BCMM8DIV SQME        DIVERSION       d
+  3014     RAIM    6            3014                3014     SMZC
+STAT-QME    ST3-TOTALOBSERVED
+TOTAL FLOWS            4104.    BCMM8    SQME   24  BCMM8    QME    24 1
+                           0.10 0.50 1.00 1.50 2.00 3.50
+STOP

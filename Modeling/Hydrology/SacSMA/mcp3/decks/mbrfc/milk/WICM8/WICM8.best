@@ -1,0 +1,140 @@
+WCGM8  Willow Creek nr Glasgow
+   10 1953    9 2004
+#   10 1953    9 1987 Evaluation Period
+DEF-TS
+# ----- Snow and Soil Modeling Data ---------------
+3058       MAP     6            INPUT
+MAP/3058.MAP06
+3058       MAT     6            INPUT
+MAT/3058.MAT
+3058       SASC    6
+3058       SWE     6
+3058       RAIM    6
+3058       INFW    6
+3058       ROCL   24
+3058       SMZC   24
+# ----- Regulation Modeling -------------------------
+# No local irrigation reported
+# ----- Upstream Return Flows -----------------------
+# None (Headwater without trans-basin diversions)
+# ----- Observed Streamflow Observations ------------
+WICM8      QME    24            INPUT
+TotQME/WICM8.OBS.QME
+# ----- Gaged Diversions ----------------------------
+# None
+# ----- Un-Gaged Diversions -------------------------
+# None
+# ----- Sum of Routed Flows -------------------------
+# None (Headwater)
+# ----- Computed Local Natural Flows ----------------
+# Same as observed (No irrigation modelled)
+# ----- Simulated Local Natural Flows ---------------
+# Same as total (No irrigation modelled)
+# ----- Simulated Total Observed Flows --------------
+WICM8      SQIN    6
+WICM8      SQME   24
+WICM8      QINE    6            OUTPUT
+TotQINE/WICM8.TOT.QINE
+END
+# --------------- Routing Calibration ----------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+# HEADWATER: NOT APPLICABLE
+#
+# --------------- Basin Model Calibration ------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Snow and Soil Modeling
+#
+SNOW-17     SN1-3058
+3058                 738.  45.            YES SUMS           RDCO
+    6  3058     MAP      1.100       3058     RAIM
+  3058     MAT     6      638.  0.6  0.6
+  3058     SWE     6            3058     SASC    6
+ 1.500.9000.1000.1009999.    0
+0.1500.2000.000 1.000.0500.050
+  .47  .64  .71  .77  .82  .87  .91  .94  .97
+   0.   0.   0.   0.   0.
+SAC-SMA     SAC1-3058
+3058                         6  3058     RAIM       3058     INFW
+  3058     SASC    6  3058      3058     SUMS                FRZE
+                    1.0001.000 28.0 70.00.2500.0100.0150.040    0  .00
+                     50.0 2.30 90.0 25.0 40.00.0500.0070.400 .300  .00
+                    0.480.720.892.553.834.835.505.153.411.970.630.57 
+                       1.  0.0   1.  0.0   1.   1.    0
+  3058     MAT     6                 3058     SWE     6
+0.1000.0800.050 0.00 -3.00.000 10.0   0.   0.   0.
+  0.0
+#
+## Compute Discharge at Outlet from Local Contribution
+#
+UNIT-HG     UH1-3058 
+3058                           533.    8           ENGL     0.000
+  3058     INFW    6  WICM8    SQIN    6
+   2480.50  11485.98  16979.31  11202.14   7547.88   4363.12   2268.92
+   1091.46
+MEAN-Q      MQ1-WICM8 
+  WICM8    SQIN    6  WICM8    SQME   24
+#
+# --------------- Total Flow Calculation -------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#&& Replaced by modeling start
+#
+# Total flow equals local flow
+#
+#WEIGH-TS    WT1-SAVESIMULATEDTOTALNODIVERSION
+#    1       WICM8    SQIN    6
+#3058      SQIN      1.00
+#
+# Account for consumptive use
+#
+#CHANLOSS    SFBM8
+#ASSUMED LOSS         VARC
+#WICM8      SQIN    6
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#     0.0       0.0       0.0       0.0       0.0       0.0
+#MEAN-Q      MQ2-WICM8   
+#  WICM8    SQIN    6  WICM8    SQME   24
+#
+# Compute the diversion that was actually possible
+#
+#CLEAR-TS
+#  WICM8DIV SQIN   6
+#WEIGH-TS    WT2-ACTUALDIVERSION
+#    2       WICM8DIV SQIN    6
+#3058      SQIN      1.00
+#WICM8     SQIN     -1.00
+#MEAN-Q      MQ3-ESTIMATEDDIVERSION
+#  WICM8DIV SQIN    6  WICM8DIV SQME   24
+#&& Replaced by modeling end
+#
+## Adjust to Observed for Routing in Downstream Segment
+#
+ADJUST-Q    AQ1-WICM8
+WICM8                  0    1    0
+WICM8      QME   24
+WICM8      SQIN   6
+WICM8      QINE   6
+   10     0.025
+#
+# --------------- Natural Local Flow Calculation -----------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Compute local natural flow
+## Same as observations (no irrigation)
+#
+# --------------- Plotting and Analysis --------------------------------
+# --+----1----+----2----+----3----+----4----+----5----+----6----+----7--
+#
+## Natural Local Flows (equal Total Flows)
+#
+WY-PLOT     WY1-LOCALNATURAL
+WICM8                   2 SLOG     1382.   25  YES
+  WICM8    QME        OBSERVEDNAT     n
+  WICM8    SQME       SIMULATEDLOC    s
+  3058     RAIM    6            3058                3058     SMZC
+STAT-QME    LOCALNATURAL
+LOCAL FLOWS            1382.    WICM8    SQME   24  WICM8    QME    24
+PEAKFLOW   WICM8
+instantaneous         06174000  WICM8    SQIN
+    6    2    0    0    WICM8.OBS.PEAK
+STOP
